@@ -24,13 +24,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS Configuration
+# Robust CORS Configuration allowing Vercel deployment URLs and localhost
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://ai-voice-clone-pi.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 @app.get("/")

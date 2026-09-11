@@ -46,11 +46,15 @@ def _build_html_email(otp_code: str) -> str:
     """
 
 def send_via_smtp(to_email: str, otp_code: str) -> bool:
-    """Fallback method: Send email using Brevo SMTP (smtp-brevo.com)."""
+    """Send email using Brevo SMTP (smtp-brevo.com)."""
     try:
-        sender_email = settings.SENDER_EMAIL or "auth@dubzeek.ai"
+        sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "ramanadhamjayaveer@gmail.com"
         sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
         login = settings.BREVO_LOGIN or sender_email
+
+        # If sender_email contains unverified domain dubzeek.ai, use BREVO_LOGIN
+        if "dubzeek.ai" in sender_email and settings.BREVO_LOGIN:
+            sender_email = settings.BREVO_LOGIN
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"{otp_code} is your Dubzeek AI Verification Code"
@@ -88,6 +92,10 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         print(f"==========================================")
         return True
 
+    sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "ramanadhamjayaveer@gmail.com"
+    if "dubzeek.ai" in sender_email and settings.BREVO_LOGIN:
+        sender_email = settings.BREVO_LOGIN
+
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "accept": "application/json",
@@ -100,7 +108,7 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
     payload = {
         "sender": {
             "name": settings.SENDER_NAME,
-            "email": settings.SENDER_EMAIL
+            "email": sender_email
         },
         "to": [
             {
@@ -120,7 +128,6 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         else:
             logger.warning(f"Brevo REST API returned status {response.status_code}: {response.text}")
             print(f"[BREVO REST API FAIL] Attempting SMTP Fallback...")
-            # Try SMTP Fallback if REST API fails (e.g., due to IP Whitelist 401 error)
             smtp_success = send_via_smtp(to_email, otp_code)
             if not smtp_success:
                 print(f"[BREVO FALLBACK LOG] OTP for {to_email}: {otp_code}")

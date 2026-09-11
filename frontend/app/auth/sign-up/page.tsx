@@ -87,9 +87,22 @@ export default function SignUpPage() {
     }
   };
 
-  // OTP Input Changes
+  // OTP Input Changes & Paste
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) value = value[value.length - 1];
+    if (value.length > 1) {
+      const digits = value.replace(/\D/g, "").slice(0, 6).split("");
+      if (digits.length > 0) {
+        const newOtp = [...otpCode];
+        digits.forEach((d, i) => {
+          if (i < 6) newOtp[i] = d;
+        });
+        setOtpCode(newOtp);
+        const focusIndex = Math.min(digits.length - 1, 5);
+        document.getElementById(`otp-input-${focusIndex}`)?.focus();
+        return;
+      }
+      value = value[value.length - 1];
+    }
     const newOtp = [...otpCode];
     newOtp[index] = value;
     setOtpCode(newOtp);
@@ -98,6 +111,28 @@ export default function SignUpPage() {
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       nextInput?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasteText = e.clipboardData.getData("text").trim();
+    const digits = pasteText.replace(/\D/g, "").slice(0, 6).split("");
+    if (digits.length > 0) {
+      const newOtp = [...otpCode];
+      digits.forEach((d, i) => {
+        if (i < 6) newOtp[i] = d;
+      });
+      setOtpCode(newOtp);
+      const focusIndex = Math.min(digits.length - 1, 5);
+      document.getElementById(`otp-input-${focusIndex}`)?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-input-${index - 1}`);
+      prevInput?.focus();
     }
   };
 
@@ -320,9 +355,11 @@ export default function SignUpPage() {
                       key={idx}
                       id={`otp-input-${idx}`}
                       type="text"
-                      maxLength={1}
+                      maxLength={6}
                       value={digit}
                       onChange={(e) => handleOtpChange(idx, e.target.value)}
+                      onPaste={handleOtpPaste}
+                      onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                       className="w-11 h-12 text-center text-lg font-bold bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white text-purple-900"
                     />
                   ))}
