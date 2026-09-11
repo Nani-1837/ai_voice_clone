@@ -1,6 +1,9 @@
 import requests
 import random
 import logging
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -9,25 +12,8 @@ def generate_otp() -> str:
     """Generate a secure 6-digit numeric OTP."""
     return f"{random.randint(100000, 999999)}"
 
-def send_otp_email(to_email: str, otp_code: str) -> bool:
-    """
-    Send 6-digit OTP verification email via Brevo REST API.
-    """
-    if not settings.BREVO_API_KEY or settings.BREVO_API_KEY == "your_brevo_api_key_here":
-        logger.warning(f"[TEST MODE] Brevo API Key not configured. Simulated OTP for {to_email}: {otp_code}")
-        print(f"==========================================")
-        print(f"[OTP SIMULATION] Email: {to_email} | OTP: {otp_code}")
-        print(f"==========================================")
-        return True
-
-    url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "accept": "application/json",
-        "api-key": settings.BREVO_API_KEY,
-        "content-type": "application/json"
-    }
-    
-    html_content = f"""
+def _build_html_email(otp_code: str) -> str:
+    return f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -59,6 +45,58 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
     </html>
     """
 
+def send_via_smtp(to_email: str, otp_code: str) -> bool:
+    """Fallback method: Send email using Brevo SMTP (smtp-brevo.com)."""
+    try:
+        sender_email = settings.SENDER_EMAIL or "auth@dubzeek.ai"
+        sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
+        login = settings.BREVO_LOGIN or sender_email
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"{otp_code} is your Dubzeek AI Verification Code"
+        msg["From"] = f"{sender_name} <{sender_email}>"
+        msg["To"] = to_email
+
+        html_body = _build_html_email(otp_code)
+        msg.attach(MIMEText(html_body, "html"))
+
+        smtp_server = settings.BREVO_SMTP_SERVER or "smtp-brevo.com"
+        port = settings.BREVO_PORT or 587
+
+        server = smtplib.SMTP(smtp_server, port, timeout=10)
+        server.starttls()
+        server.login(login, settings.BREVO_API_KEY)
+        server.sendmail(sender_email, [to_email], msg.as_string())
+        server.quit()
+
+        logger.info(f"OTP email sent via Brevo SMTP fallback to {to_email}")
+        print(f"[BREVO SMTP SUCCESS] 6-digit OTP code {otp_code} successfully delivered to {to_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Brevo SMTP Fallback Exception: {str(e)}")
+        print(f"[BREVO SMTP EXCEPTION] {str(e)}")
+        return False
+
+def send_otp_email(to_email: str, otp_code: str) -> bool:
+    """
+    Send 6-digit OTP verification email via Brevo REST API with automatic SMTP fallback.
+    """
+    if not settings.BREVO_API_KEY or settings.BREVO_API_KEY == "your_brevo_api_key_here":
+        logger.warning(f"[TEST MODE] Brevo API Key not configured. Simulated OTP for {to_email}: {otp_code}")
+        print(f"==========================================")
+        print(f"[OTP SIMULATION] Email: {to_email} | OTP: {otp_code}")
+        print(f"==========================================")
+        return True
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": settings.BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+    
+    html_content = _build_html_email(otp_code)
+
     payload = {
         "sender": {
             "name": settings.SENDER_NAME,
@@ -76,14 +114,21 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
         if response.status_code in [200, 201, 202]:
-            logger.info(f"OTP email successfully sent to {to_email} via Brevo")
+            logger.info(f"OTP email successfully sent to {to_email} via Brevo REST API")
+            print(f"[BREVO REST API SUCCESS] OTP {otp_code} sent to {to_email}")
             return True
         else:
-            logger.error(f"Brevo API error ({response.status_code}): {response.text}")
-            # Log fallback print so tester can see OTP in console if Brevo fails
-            print(f"[BREVO FALLBACK LOG] OTP for {to_email}: {otp_code}")
-            return True # Fallback so flow continues even if Brevo domain is unverified
+            logger.warning(f"Brevo REST API returned status {response.status_code}: {response.text}")
+            print(f"[BREVO REST API FAIL] Attempting SMTP Fallback...")
+            # Try SMTP Fallback if REST API fails (e.g., due to IP Whitelist 401 error)
+            smtp_success = send_via_smtp(to_email, otp_code)
+            if not smtp_success:
+                print(f"[BREVO FALLBACK LOG] OTP for {to_email}: {otp_code}")
+            return True
     except Exception as e:
-        logger.error(f"Exception sending OTP email via Brevo: {str(e)}")
-        print(f"[BREVO EXCEPTION FALLBACK LOG] OTP for {to_email}: {otp_code}")
+        logger.error(f"Exception sending OTP email via Brevo REST API: {str(e)}")
+        print(f"[BREVO REST API EXCEPTION] Attempting SMTP Fallback...")
+        smtp_success = send_via_smtp(to_email, otp_code)
+        if not smtp_success:
+            print(f"[BREVO EXCEPTION LOG] OTP for {to_email}: {otp_code}")
         return True
