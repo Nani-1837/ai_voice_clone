@@ -48,13 +48,9 @@ def _build_html_email(otp_code: str) -> str:
 def send_via_smtp(to_email: str, otp_code: str) -> bool:
     """Send email using Brevo SMTP (smtp-brevo.com)."""
     try:
-        sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "ramanadhamjayaveer@gmail.com"
+        sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "no-reply@dubzeek.ai"
         sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
         login = settings.BREVO_LOGIN or sender_email
-
-        # If sender_email contains unverified domain dubzeek.ai, use BREVO_LOGIN
-        if "dubzeek.ai" in sender_email and settings.BREVO_LOGIN:
-            sender_email = settings.BREVO_LOGIN
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"{otp_code} is your Dubzeek AI Verification Code"
@@ -73,7 +69,7 @@ def send_via_smtp(to_email: str, otp_code: str) -> bool:
         server.sendmail(sender_email, [to_email], msg.as_string())
         server.quit()
 
-        logger.info(f"OTP email sent via Brevo SMTP fallback to {to_email}")
+        logger.info(f"OTP email sent via Brevo SMTP to {to_email}")
         print(f"[BREVO SMTP SUCCESS] 6-digit OTP code {otp_code} successfully delivered to {to_email}")
         return True
     except Exception as e:
@@ -92,9 +88,7 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         print(f"==========================================")
         return True
 
-    sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "ramanadhamjayaveer@gmail.com"
-    if "dubzeek.ai" in sender_email and settings.BREVO_LOGIN:
-        sender_email = settings.BREVO_LOGIN
+    sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "no-reply@dubzeek.ai"
 
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
