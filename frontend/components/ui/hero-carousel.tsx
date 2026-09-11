@@ -9,7 +9,7 @@ import {
   useReducedMotion,
 } from "framer-motion"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 export interface HeroCarouselItem {
   /** Stable key; falls back to the index. @default undefined */
