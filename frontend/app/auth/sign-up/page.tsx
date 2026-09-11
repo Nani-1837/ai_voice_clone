@@ -65,8 +65,9 @@ export default function SignUpPage() {
     }
 
     setLoading(true);
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     try {
-      const response = await fetch("http://localhost:8000/api/auth/send-otp", {
+      const response = await fetch(`${apiBaseUrl}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -112,8 +113,9 @@ export default function SignUpPage() {
     }
 
     setLoading(true);
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     try {
-      const response = await fetch("http://localhost:8000/api/auth/verify-otp", {
+      const response = await fetch(`${apiBaseUrl}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
