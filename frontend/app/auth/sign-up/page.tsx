@@ -153,6 +153,7 @@ export default function SignUpPage() {
       const response = await fetch(`${apiBaseUrl}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           email,
           otp_code: fullOtp,
