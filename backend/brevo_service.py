@@ -46,7 +46,7 @@ def _build_html_email(otp_code: str) -> str:
 
 def send_via_brevo_smtp(to_email: str, otp_code: str) -> bool:
     """
-    Send transactional email using Brevo SMTP (smtp-brevo.com) with BREVO_SMTP_KEY.
+    Send transactional email using Brevo SMTP Relay (smtp-relay.brevo.com:587).
     """
     try:
         sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
@@ -67,7 +67,13 @@ def send_via_brevo_smtp(to_email: str, otp_code: str) -> bool:
         html_body = _build_html_email(otp_code)
         msg.attach(MIMEText(html_body, "html"))
 
-        smtp_server = settings.BREVO_SMTP_SERVER or "smtp-brevo.com"
+        # Clean & validate official Brevo SMTP relay hostname
+        raw_host = settings.BREVO_SMTP_SERVER
+        if not raw_host or "@" in raw_host or raw_host in ["smtp-brevo.com", "smtp.brevo.com"]:
+            smtp_server = "smtp-relay.brevo.com"
+        else:
+            smtp_server = raw_host.strip()
+
         port = settings.BREVO_PORT or 587
 
         server = smtplib.SMTP(smtp_server, port, timeout=12)
