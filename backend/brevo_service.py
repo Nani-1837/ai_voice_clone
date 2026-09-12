@@ -77,60 +77,19 @@ def send_via_brevo_rest(to_email: str, otp_code: str) -> bool:
     }
 
     try:
-        response = requests.post(url, json=payload, headers=headers, timeout=5)
+        response = requests.post(url, json=payload, headers=headers, timeout=4)
         if response.status_code in [200, 201, 202]:
             logger.info(f"Brevo REST API email sent successfully to {to_email}")
             print(f"[BREVO REST SUCCESS] 6-digit OTP code {otp_code} delivered to {to_email}")
             return True
         else:
-            logger.warning(f"Brevo REST API status {response.status_code}: {response.text}")
             return False
     except Exception as e:
-        logger.error(f"Brevo REST Exception: {str(e)}")
         return False
 
-def send_via_brevo_smtps_ssl(to_email: str, otp_code: str) -> bool:
+def send_via_brevo_smtp_starttls(to_email: str, otp_code: str, port: int = 2525, timeout: int = 4) -> bool:
     """
-    Send transactional email using Brevo SMTPS Port 465 SSL.
-    Port 465 SMTPS is not blocked by cloud hosting providers (Render/AWS/GCP).
-    """
-    try:
-        sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
-        sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
-        login = settings.BREVO_SMTP_USER or sender_email
-        smtp_key = settings.BREVO_SMTP_KEY or settings.BREVO_API
-
-        if not smtp_key or not login:
-            return False
-
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"{otp_code} is your Dubzeek AI Verification Code"
-        msg["From"] = f"{sender_name} <{sender_email}>"
-        msg["To"] = to_email
-
-        html_body = _build_html_email(otp_code)
-        msg.attach(MIMEText(html_body, "html"))
-
-        # Official Brevo SMTP host
-        smtp_server = "smtp-relay.brevo.com"
-
-        # Port 465 SSL connection
-        server = smtplib.SMTP_SSL(smtp_server, 465, timeout=6)
-        server.login(login, smtp_key)
-        server.sendmail(sender_email, [to_email], msg.as_string())
-        server.quit()
-
-        logger.info(f"Brevo SMTPS (Port 465 SSL) email successfully sent to {to_email}")
-        print(f"[BREVO SMTPS PORT 465 SUCCESS] 6-digit OTP code {otp_code} delivered to {to_email}")
-        return True
-    except Exception as e:
-        logger.error(f"Brevo SMTPS Port 465 Error: {str(e)}")
-        print(f"[BREVO SMTPS PORT 465 FAIL] {str(e)}")
-        return False
-
-def send_via_brevo_smtp_starttls(to_email: str, otp_code: str, port: int = 587) -> bool:
-    """
-    Fallback method: Send email using Brevo SMTP STARTTLS (Port 587 or 2525).
+    Send email using Brevo SMTP STARTTLS (Port 2525 - Render Firewall Friendly Port).
     """
     try:
         sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
@@ -151,7 +110,7 @@ def send_via_brevo_smtp_starttls(to_email: str, otp_code: str, port: int = 587) 
 
         smtp_server = "smtp-relay.brevo.com"
 
-        server = smtplib.SMTP(smtp_server, port, timeout=5)
+        server = smtplib.SMTP(smtp_server, port, timeout=timeout)
         server.starttls()
         server.login(login, smtp_key)
         server.sendmail(sender_email, [to_email], msg.as_string())
@@ -161,16 +120,49 @@ def send_via_brevo_smtp_starttls(to_email: str, otp_code: str, port: int = 587) 
         print(f"[BREVO SMTP PORT {port} SUCCESS] 6-digit OTP code {otp_code} delivered to {to_email}")
         return True
     except Exception as e:
-        logger.error(f"Brevo SMTP Port {port} Error: {str(e)}")
-        print(f"[BREVO SMTP PORT {port} FAIL] {str(e)}")
+        return False
+
+def send_via_brevo_smtps_ssl(to_email: str, otp_code: str, timeout: int = 3) -> bool:
+    """
+    Send transactional email using Brevo SMTPS Port 465 SSL.
+    """
+    try:
+        sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
+        sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
+        login = settings.BREVO_SMTP_USER or sender_email
+        smtp_key = settings.BREVO_SMTP_KEY or settings.BREVO_API
+
+        if not smtp_key or not login:
+            return False
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"{otp_code} is your Dubzeek AI Verification Code"
+        msg["From"] = f"{sender_name} <{sender_email}>"
+        msg["To"] = to_email
+
+        html_body = _build_html_email(otp_code)
+        msg.attach(MIMEText(html_body, "html"))
+
+        smtp_server = "smtp-relay.brevo.com"
+
+        server = smtplib.SMTP_SSL(smtp_server, 465, timeout=timeout)
+        server.login(login, smtp_key)
+        server.sendmail(sender_email, [to_email], msg.as_string())
+        server.quit()
+
+        logger.info(f"Brevo SMTPS Port 465 SSL email successfully sent to {to_email}")
+        print(f"[BREVO SMTPS PORT 465 SUCCESS] 6-digit OTP code {otp_code} delivered to {to_email}")
+        return True
+    except Exception as e:
         return False
 
 def send_otp_email(to_email: str, otp_code: str) -> bool:
     """
-    Send 6-digit OTP verification email via multi-channel fallback engine:
-    1. Brevo REST API (Port 443 HTTPS)
-    2. Brevo SMTPS (Port 465 SSL)
-    3. Brevo SMTP (Port 587 / 2525 STARTTLS)
+    Send 6-digit OTP verification email via optimized cloud delivery engine:
+    1. Brevo REST API (Port 443 HTTPS - Instant)
+    2. Brevo SMTP Port 2525 (Render Cloud Firewall Friendly Port - Fast)
+    3. Brevo SMTPS Port 465 SSL
+    4. Brevo SMTP Port 587 STARTTLS
     """
     api_key = settings.BREVO_API or settings.BREVO_SMTP_KEY
     if not api_key or api_key == "your_brevo_smtp_key_here":
@@ -180,20 +172,20 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         print(f"==========================================")
         return True
 
-    # 1. Attempt Brevo REST API (Port 443 HTTPS - Standard Web Port)
+    # 1. Attempt Brevo REST API (Port 443 HTTPS)
     if send_via_brevo_rest(to_email, otp_code):
         return True
 
-    # 2. Attempt Brevo SMTPS Port 465 SSL (Cloud Firewall Friendly)
-    if send_via_brevo_smtps_ssl(to_email, otp_code):
+    # 2. Attempt Brevo SMTP Port 2525 STARTTLS (Render Cloud Firewall Approved Port)
+    if send_via_brevo_smtp_starttls(to_email, otp_code, port=2525, timeout=4):
         return True
 
-    # 3. Attempt Brevo SMTP Port 587 STARTTLS
-    if send_via_brevo_smtp_starttls(to_email, otp_code, port=587):
+    # 3. Attempt Brevo SMTPS Port 465 SSL
+    if send_via_brevo_smtps_ssl(to_email, otp_code, timeout=3):
         return True
 
-    # 4. Attempt Brevo SMTP Port 2525 STARTTLS
-    if send_via_brevo_smtp_starttls(to_email, otp_code, port=2525):
+    # 4. Attempt Brevo SMTP Port 587 STARTTLS
+    if send_via_brevo_smtp_starttls(to_email, otp_code, port=587, timeout=3):
         return True
 
     print(f"[OTP FALLBACK CONSOLE LOG] Code for {to_email}: {otp_code}")
