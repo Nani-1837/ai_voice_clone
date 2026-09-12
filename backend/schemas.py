@@ -1,6 +1,6 @@
 import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 class RegisterRequest(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100)
@@ -23,17 +23,19 @@ class LoginRequest(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
+    public_id: Optional[str] = None
     full_name: str
     email: str
     primary_language: str
     is_verified: bool
     created_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
-
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    refresh_token: Optional[str] = None
     user: UserResponse
+
