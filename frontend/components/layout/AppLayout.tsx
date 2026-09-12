@@ -215,6 +215,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                   <div className="py-1">
                     <Link
+                      href="/dashboard"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-semibold"
+                    >
+                      <Sparkles className="w-4 h-4 text-purple-600" />
+                      <span>Studio Workspace</span>
+                    </Link>
+                    <Link
                       href="/settings"
                       onClick={() => setShowProfileMenu(false)}
                       className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition-colors"
