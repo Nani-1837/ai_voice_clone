@@ -9,10 +9,10 @@ class Settings:
     # Brevo Environment Variables (Supports both REST API & SMTPS Port 465 SSL)
     BREVO_API: str = os.getenv("BREVO_API", os.getenv("BREVO_API_KEY", "")).strip()
     BREVO_SMTP_KEY: str = os.getenv("BREVO_SMTP_KEY", os.getenv("BREVO_API", os.getenv("BREVO_API_KEY", ""))).strip()
-    BREVO_SMTP_USER: str = os.getenv("BREVO_SMTP_USER", os.getenv("BREVO_LOGIN", "")).strip()
-    BREVO_SMTP_FROM: str = os.getenv("BREVO_SMTP_FROM", os.getenv("SENDER_EMAIL", "no-reply@dubzeek.ai")).strip()
+    BREVO_SMTP_USER: str = os.getenv("BREVO_SMTP_USER", os.getenv("BREVO_LOGIN", "b46190001@smtp-brevo.com")).strip()
+    BREVO_SMTP_FROM: str = os.getenv("BREVO_SMTP_FROM", os.getenv("SENDER_EMAIL", "jayaveer1639@gmail.com")).strip()
     BREVO_SMTP_SERVER: str = os.getenv("BREVO_SMTP_SERVER", "smtp-relay.brevo.com").strip()
-    BREVO_PORT: int = int(os.getenv("BREVO_PORT", "465"))
+    BREVO_PORT: int = int(os.getenv("BREVO_PORT", "2525"))
     SENDER_NAME: str = os.getenv("SENDER_NAME", "Dubzeek AI Studio").strip()
     
     # JWT Settings
