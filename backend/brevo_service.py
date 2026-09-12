@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
+
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from config import settings
@@ -52,12 +53,16 @@ def send_via_brevo_sdk(to_email: str, otp_code: str) -> bool:
     Send transactional email using official Brevo Python SDK (sib_api_v3_sdk).
     """
     try:
+        api_key = settings.BREVO_API
+        if not api_key:
+            return False
+
         configuration = sib_api_v3_sdk.Configuration()
-        configuration.api_key['api-key'] = settings.BREVO_API_KEY
+        configuration.api_key['api-key'] = api_key
 
         api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
 
-        sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "no-reply@dubzeek.ai"
+        sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
         sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
 
         send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
@@ -83,9 +88,9 @@ def send_via_brevo_sdk(to_email: str, otp_code: str) -> bool:
 def send_via_smtp(to_email: str, otp_code: str) -> bool:
     """Fallback method: Send email using Brevo SMTP (smtp-brevo.com:587)."""
     try:
-        sender_email = settings.SENDER_EMAIL or settings.BREVO_LOGIN or "no-reply@dubzeek.ai"
+        sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
         sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
-        login = settings.BREVO_LOGIN or sender_email
+        login = settings.BREVO_SMTP_USER or settings.BREVO_LOGIN or sender_email
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"{otp_code} is your Dubzeek AI Verification Code"
@@ -97,10 +102,11 @@ def send_via_smtp(to_email: str, otp_code: str) -> bool:
 
         smtp_server = settings.BREVO_SMTP_SERVER or "smtp-brevo.com"
         port = settings.BREVO_PORT or 587
+        smtp_password = settings.BREVO_API
 
         server = smtplib.SMTP(smtp_server, port, timeout=10)
         server.starttls()
-        server.login(login, settings.BREVO_API_KEY)
+        server.login(login, smtp_password)
         server.sendmail(sender_email, [to_email], msg.as_string())
         server.quit()
 
@@ -116,7 +122,8 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
     """
     Send 6-digit OTP verification email via Brevo Official SDK with automatic SMTP fallback.
     """
-    if not settings.BREVO_API_KEY or settings.BREVO_API_KEY == "your_brevo_api_key_here":
+    api_key = settings.BREVO_API
+    if not api_key or api_key == "your_brevo_api_key_here":
         logger.warning(f"[TEST MODE] Brevo API Key not configured. Simulated OTP for {to_email}: {otp_code}")
         print(f"==========================================")
         print(f"[OTP SIMULATION] Email: {to_email} | OTP: {otp_code}")
