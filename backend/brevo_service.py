@@ -3,10 +3,6 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import requests
-
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -48,106 +44,60 @@ def _build_html_email(otp_code: str) -> str:
     </html>
     """
 
-def send_via_brevo_rest(to_email: str, otp_code: str) -> bool:
-    """Send transactional email using Brevo REST API v3."""
-    api_key = settings.BREVO_API
-    if not api_key:
-        return False
-
-    url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "accept": "application/json",
-        "api-key": api_key,
-        "content-type": "application/json"
-    }
-    
-    sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
-    sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
-
-    payload = {
-        "sender": {
-            "name": sender_name,
-            "email": sender_email
-        },
-        "to": [
-            {
-                "email": to_email
-            }
-        ],
-        "subject": f"{otp_code} is your Dubzeek AI Verification Code",
-        "htmlContent": _build_html_email(otp_code)
-    }
-
+def send_via_brevo_smtp(to_email: str, otp_code: str) -> bool:
+    """
+    Send transactional email using Brevo SMTP (smtp-brevo.com) with BREVO_SMTP_KEY.
+    """
     try:
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        if response.status_code in [200, 201, 202]:
-            logger.info(f"Brevo REST API email sent successfully to {to_email}")
-            print(f"[BREVO REST SUCCESS] 6-digit OTP code {otp_code} delivered to {to_email}")
-            return True
-        else:
-            logger.warning(f"Brevo REST API returned status {response.status_code}: {response.text}")
-            print(f"[BREVO REST FAIL {response.status_code}] {response.text}")
-            return False
-    except Exception as e:
-        logger.error(f"Brevo REST Exception: {str(e)}")
-        print(f"[BREVO REST EXCEPTION] {str(e)}")
-        return False
-
-def send_via_brevo_sdk(to_email: str, otp_code: str) -> bool:
-    """Send transactional email using official Brevo Python SDK (sib_api_v3_sdk)."""
-    try:
-        api_key = settings.BREVO_API
-        if not api_key:
-            return False
-
-        configuration = sib_api_v3_sdk.Configuration()
-        configuration.api_key['api-key'] = api_key
-
-        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
-
         sender_email = settings.BREVO_SMTP_FROM or "no-reply@dubzeek.ai"
         sender_name = settings.SENDER_NAME or "Dubzeek AI Studio"
+        login = settings.BREVO_SMTP_USER or sender_email
+        smtp_key = settings.BREVO_SMTP_KEY
 
-        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-            to=[{"email": to_email}],
-            sender={"name": sender_name, "email": sender_email},
-            subject=f"{otp_code} is your Dubzeek AI Verification Code",
-            html_content=_build_html_email(otp_code)
-        )
+        if not smtp_key:
+            logger.warning("[SMTP CONFIG ERROR] BREVO_SMTP_KEY is missing in settings.")
+            print("[SMTP CONFIG ERROR] BREVO_SMTP_KEY is missing.")
+            return False
 
-        api_response = api_instance.send_transac_email(send_smtp_email)
-        logger.info(f"Brevo SDK email sent successfully to {to_email}: {api_response}")
-        print(f"[BREVO SDK SUCCESS] 6-digit OTP code {otp_code} delivered to {to_email}")
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"{otp_code} is your Dubzeek AI Verification Code"
+        msg["From"] = f"{sender_name} <{sender_email}>"
+        msg["To"] = to_email
+
+        html_body = _build_html_email(otp_code)
+        msg.attach(MIMEText(html_body, "html"))
+
+        smtp_server = settings.BREVO_SMTP_SERVER or "smtp-brevo.com"
+        port = settings.BREVO_PORT or 587
+
+        server = smtplib.SMTP(smtp_server, port, timeout=12)
+        server.starttls()
+        server.login(login, smtp_key)
+        server.sendmail(sender_email, [to_email], msg.as_string())
+        server.quit()
+
+        logger.info(f"Brevo SMTP email successfully sent to {to_email}")
+        print(f"[BREVO SMTP SUCCESS] 6-digit OTP code {otp_code} delivered to {to_email}")
         return True
-    except ApiException as e:
-        logger.error(f"Brevo SDK Exception: {e}")
-        print(f"[BREVO SDK EXCEPTION] {e}")
-        return False
     except Exception as e:
-        logger.error(f"Brevo SDK General Error: {str(e)}")
-        print(f"[BREVO SDK ERROR] {str(e)}")
+        logger.error(f"Brevo SMTP Error: {str(e)}")
+        print(f"[BREVO SMTP EXCEPTION] {str(e)}")
         return False
 
 def send_otp_email(to_email: str, otp_code: str) -> bool:
     """
-    Send 6-digit OTP verification email via Brevo REST API with SDK fallback.
+    Send 6-digit OTP verification email via pure Brevo SMTP.
     """
-    api_key = settings.BREVO_API
-    if not api_key or api_key == "your_brevo_api_key_here":
-        logger.warning(f"[TEST MODE] Brevo API Key not configured. Simulated OTP for {to_email}: {otp_code}")
+    smtp_key = settings.BREVO_SMTP_KEY
+    if not smtp_key or smtp_key == "your_brevo_smtp_key_here":
+        logger.warning(f"[TEST MODE] BREVO_SMTP_KEY not set. Simulated OTP for {to_email}: {otp_code}")
         print(f"==========================================")
         print(f"[OTP SIMULATION] Email: {to_email} | OTP: {otp_code}")
         print(f"==========================================")
         return True
 
-    # 1. Attempt Brevo REST API
-    rest_success = send_via_brevo_rest(to_email, otp_code)
-    if rest_success:
-        return True
-
-    # 2. Attempt Brevo Python SDK
-    sdk_success = send_via_brevo_sdk(to_email, otp_code)
-    if sdk_success:
+    success = send_via_brevo_smtp(to_email, otp_code)
+    if success:
         return True
 
     print(f"[OTP FALLBACK CONSOLE LOG] Code for {to_email}: {otp_code}")
