@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Sparkles,
   HelpCircle,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck
 } from "lucide-react";
 import { logoutUser } from "@/lib/api";
 
