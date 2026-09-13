@@ -43,7 +43,7 @@ export default function LoginPage() {
 
       setSubmitted(true);
       setTimeout(() => {
-        router.push("/studio");
+        router.push("/create-dubbing");
       }, 1500);
     } catch (err: any) {
       setErrorMsg(err.message || "Something went wrong. Please try again.");
@@ -95,12 +95,12 @@ export default function LoginPage() {
             <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-3">
               <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
               <h3 className="text-base font-bold text-emerald-900">Signed In Successfully!</h3>
-              <p className="text-xs font-normal text-emerald-700">Launching your studio workspace...</p>
+              <p className="text-xs font-normal text-emerald-700">Launching your workspace...</p>
               <Link
-                href="/studio"
+                href="/create-dubbing"
                 className="inline-block mt-2 px-6 py-2.5 bg-emerald-600 text-white font-medium text-xs rounded-xl hover:bg-emerald-700 shadow-sm transition-all"
               >
-                Go to Studio Now
+                Go to Workspace Now
               </Link>
             </div>
           ) : (

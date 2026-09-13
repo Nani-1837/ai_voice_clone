@@ -51,7 +51,7 @@ export default function ProjectDetailsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
-              href="/dashboard"
+              href="/projects"
               className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -295,7 +295,7 @@ export default function ProjectDetailsPage() {
                   <button
                     onClick={() => {
                       setShowDeleteModal(false);
-                      router.push("/dashboard");
+                      router.push("/projects");
                     }}
                     className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-sm"
                   >

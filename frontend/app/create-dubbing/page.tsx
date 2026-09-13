@@ -132,7 +132,7 @@ export default function CreateDubbingPage() {
             </p>
           </div>
           <Link
-            href="/dashboard"
+            href="/projects"
             className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 p-2 bg-slate-100 rounded-xl"
           >
             <ArrowLeft className="w-4 h-4" />

@@ -78,7 +78,7 @@ export default function Navbar() {
               <Globe className="w-3.5 h-3.5 text-cyan-600" />
               Languages
             </Link>
-            <Link href="/dashboard" className="hover:text-purple-600 transition-colors">
+            <Link href="/create-dubbing" className="hover:text-purple-600 transition-colors">
               Studio Workspace
             </Link>
             <Link href="/pricing" className="hover:text-purple-600 transition-colors">
@@ -119,7 +119,7 @@ export default function Navbar() {
                       </div>
 
                       <Link
-                        href="/dashboard"
+                        href="/create-dubbing"
                         onClick={() => setProfileDropdownOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-purple-50 hover:text-purple-700 rounded-xl transition-all"
                       >
@@ -148,7 +148,7 @@ export default function Navbar() {
                   Sign In
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/create-dubbing"
                   className="relative inline-flex items-center gap-2 text-sm font-bold text-slate-900 bg-gradient-to-r from-purple-300 via-indigo-200 to-cyan-300 hover:from-purple-400 hover:to-cyan-400 px-4 py-2.5 rounded-xl shadow-xs border border-purple-300/60 transition-all group overflow-hidden"
                 >
                   <Sparkles className="w-4 h-4 text-slate-900 group-hover:rotate-12 transition-transform" />
@@ -202,7 +202,7 @@ export default function Navbar() {
             Supported Languages
           </Link>
           <Link
-            href="/dashboard"
+            href="/create-dubbing"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
           >
@@ -245,11 +245,11 @@ export default function Navbar() {
                   Sign In
                 </Link>
                 <Link
-                  href="/studio"
+                  href="/create-dubbing"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-slate-900 rounded-xl hover:bg-purple-700"
                 >
-                  Launch Studio
+                  Get Started
                 </Link>
               </>
             )}

@@ -175,7 +175,7 @@ export default function SignUpPage() {
 
       setIsCompleted(true);
       setTimeout(() => {
-        router.push("/studio");
+        router.push("/create-dubbing");
       }, 1500);
     } catch (err: any) {
       setErrorMsg(err.message || "Invalid verification code.");
@@ -227,12 +227,12 @@ export default function SignUpPage() {
             <div className="p-6 bg-purple-50 border border-purple-200 rounded-2xl text-center space-y-3">
               <CheckCircle2 className="w-12 h-12 text-purple-600 mx-auto" />
               <h3 className="text-base font-bold text-purple-900">Account Verified & Created!</h3>
-              <p className="text-xs font-normal text-purple-700">Launching your studio workspace...</p>
+              <p className="text-xs font-normal text-purple-700">Launching your workspace...</p>
               <Link
-                href="/studio"
+                href="/create-dubbing"
                 className="inline-block mt-2 px-6 py-2.5 bg-purple-600 text-white font-medium text-xs rounded-xl hover:bg-purple-700 shadow-sm transition-all"
               >
-                Launch Studio Workspace Now
+                Go to Workspace Now
               </Link>
             </div>
           ) : step === "form" ? (

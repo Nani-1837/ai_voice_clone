@@ -62,7 +62,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between shadow-xs">
         {/* Left Logo */}
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+          <Link href="/create-dubbing" className="flex items-center gap-2.5 group">
             <img
               src="/cropped_circle_image.png"
               alt="Dubzeek Logo"
@@ -185,7 +185,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                   <div className="py-1">
                     <Link
-                      href="/dashboard"
+                      href="/create-dubbing"
                       onClick={() => setShowProfileMenu(false)}
                       className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-semibold"
                     >

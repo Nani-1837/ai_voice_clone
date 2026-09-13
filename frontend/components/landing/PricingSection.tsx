@@ -168,7 +168,7 @@ export default function PricingSection() {
             </div>
 
             <Link
-              href="/studio"
+              href="/create-dubbing"
               className="mt-8 w-full block text-center py-3.5 rounded-2xl font-extrabold text-xs text-black bg-gradient-to-r from-purple-300 via-indigo-200 to-cyan-300 hover:from-purple-400 hover:to-cyan-400 shadow-md shadow-purple-500/20 border border-purple-400 transition-all"
             >
               Start 14-Day Free Trial
