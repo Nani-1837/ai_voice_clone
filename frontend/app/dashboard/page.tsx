@@ -23,7 +23,10 @@ import {
   HeartPulse,
   Video,
   Cpu,
-  ShieldCheck,
+  FolderKanban,
+  BarChart3,
+  Settings,
+  HelpCircle,
   FileText
 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
@@ -98,6 +101,73 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Card-Style Navigation Grid Tiles (Replacing the left-side sidebar)
+  const navCardTiles = [
+    {
+      title: "Create New Dubbing",
+      desc: "Upload video, select target language (Telugu/Hindi/etc.), clone voice & lip sync.",
+      href: "/create-dubbing",
+      icon: PlusCircle,
+      badge: "Guided Workflow",
+      highlight: true,
+      accent: "from-purple-600 to-indigo-600 text-white"
+    },
+    {
+      title: "Dubbing Projects",
+      desc: "Manage, view, and organize all your video dubbing projects.",
+      href: "/projects",
+      icon: FolderKanban,
+      badge: `${projects.length} Active`,
+      accent: "text-purple-600 bg-purple-50"
+    },
+    {
+      title: "My Rendered Videos",
+      desc: "Stream, scrub, and download your completed 1080p MP4 videos.",
+      href: "/videos",
+      icon: Video,
+      badge: "9 Rendered",
+      accent: "text-cyan-600 bg-cyan-50"
+    },
+    {
+      title: "Neural Voice Library",
+      desc: "Explore studio neural voices, prosody matching & speaker voice clones.",
+      href: "/voice-library",
+      icon: Mic2,
+      badge: "Zero-Shot Clone",
+      accent: "text-indigo-600 bg-indigo-50"
+    },
+    {
+      title: "Language Matrix",
+      desc: "View supported Indian regional and global language translation models.",
+      href: "/languages",
+      icon: Globe2,
+      badge: "30+ Languages",
+      accent: "text-emerald-600 bg-emerald-50"
+    },
+    {
+      title: "Usage & Compute Quota",
+      desc: "Monitor your monthly compute minutes, rendering logs, and plan limits.",
+      href: "/usage",
+      icon: BarChart3,
+      badge: "45 / 60 Min",
+      accent: "text-amber-600 bg-amber-50"
+    },
+    {
+      title: "Account Settings",
+      desc: "Update your profile preferences, primary language, and security options.",
+      href: "/settings",
+      icon: Settings,
+      accent: "text-slate-700 bg-slate-100"
+    },
+    {
+      title: "Help & Walkthroughs",
+      desc: "Access video dubbing tutorials, documentation, and support.",
+      href: "/help",
+      icon: HelpCircle,
+      accent: "text-slate-700 bg-slate-100"
+    },
+  ];
+
   const stats = [
     {
       label: "Total Dubbing Projects",
@@ -128,27 +198,6 @@ export default function DashboardPage() {
     },
   ];
 
-  const features = [
-    {
-      icon: Users,
-      title: "Multi-Speaker Diarization",
-      desc: "Identifies distinct speakers in scene & maps unique voice cloning profiles.",
-      badge: "Speaker Diarization"
-    },
-    {
-      icon: HeartPulse,
-      title: "Emotion & Prosody Sync",
-      desc: "Preserves emotional pitch contours, authority, and excitement in target audio.",
-      badge: "Prosody Match"
-    },
-    {
-      icon: Video,
-      title: "HD Lip Synchronization",
-      desc: "Aligns actor mouth movements with translated target speech in 1080p60.",
-      badge: "Wav2Lip HD"
-    },
-  ];
-
   const getStatusBadge = (status: Project["status"]) => {
     switch (status) {
       case "Completed":
@@ -172,11 +221,10 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto space-y-10">
+      <div className="max-w-7xl mx-auto space-y-12 pb-16">
         
-        {/* ONE LINE HEROSECTION STYLE HEADING */}
-        <div className="text-center max-w-5xl mx-auto space-y-4 pt-2">
-          {/* Badge */}
+        {/* HEROSECTION STYLE HEADING (SINGLE LINE) */}
+        <div className="text-center max-w-5xl mx-auto space-y-4 pt-4">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -192,7 +240,6 @@ export default function DashboardPage() {
             />
           </motion.div>
 
-          {/* Single Line Hero Heading */}
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -206,7 +253,6 @@ export default function DashboardPage() {
             AI-powered voice cloning, multi-speaker diarization, acoustic prosody transfer, and Wav2Lip HD synchronization.
           </p>
 
-          {/* Primary Dominant CTA */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -224,7 +270,80 @@ export default function DashboardPage() {
           </motion.div>
         </div>
 
-        {/* 3 COLUMNS LOOK: PROFESSIONAL LEVEL METRICS (3 COLUMNS) */}
+        {/* NAVIGATION CARD TILES (REPLACING THE LEFT SIDEBAR) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <span>Platform Studio Navigation</span>
+            </h2>
+            <span className="text-xs font-bold text-slate-400">Select any workspace card tile to launch</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {navCardTiles.map((card, idx) => {
+              const Icon = card.icon;
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <Link
+                    href={card.href}
+                    className={`block h-full p-6 rounded-3xl border transition-all duration-300 relative group flex flex-col justify-between ${
+                      card.highlight
+                        ? "bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-white border-purple-700 shadow-xl shadow-purple-900/30 hover:scale-[1.03]"
+                        : "glass-card glass-card-hover bg-white border-slate-200 hover:border-purple-300"
+                    }`}
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold shadow-2xs group-hover:scale-110 transition-transform ${
+                          card.highlight ? "bg-white/20 text-white" : card.accent
+                        }`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        {card.badge && (
+                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                            card.highlight
+                              ? "bg-purple-500/30 text-purple-200 border border-purple-400/40"
+                              : "bg-slate-100 text-slate-700"
+                          }`}>
+                            {card.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      <div>
+                        <h3 className={`text-base font-extrabold tracking-tight ${
+                          card.highlight ? "text-white" : "text-slate-900 group-hover:text-purple-700"
+                        }`}>
+                          {card.title}
+                        </h3>
+                        <p className={`text-xs mt-2 leading-relaxed font-normal ${
+                          card.highlight ? "text-purple-200" : "text-slate-500"
+                        }`}>
+                          {card.desc}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-slate-100/30 flex items-center justify-between text-xs font-bold">
+                      <span className={card.highlight ? "text-purple-200" : "text-purple-600"}>Launch Studio</span>
+                      <ArrowRight className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${
+                        card.highlight ? "text-white" : "text-purple-600"
+                      }`} />
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3 COLUMNS LOOK: SUMMARY STATS (3 COLUMNS) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stats.map((st, idx) => {
             const Icon = st.icon;
@@ -234,7 +353,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * idx }}
-                className={`glass-card glass-card-hover p-6 rounded-3xl bg-white border ${st.border} shadow-sm space-y-3 relative overflow-hidden group`}
+                className={`glass-card glass-card-hover p-6 rounded-3xl bg-white border ${st.border} shadow-xs space-y-3 relative overflow-hidden group`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{st.label}</span>
@@ -251,57 +370,8 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* 3 COLUMNS LOOK: ALL FEATURES CARDS (3 COLUMNS) */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-purple-700 bg-purple-100 px-3 py-1 rounded-full border border-purple-200">
-              Neural Dubbing Engine Capabilities
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {features.map((feat, idx) => {
-              const Icon = feat.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="glass-card glass-card-hover p-6 rounded-3xl bg-white border border-slate-200 hover:border-purple-300 relative group flex flex-col justify-between"
-                >
-                  <div className="space-y-4">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-2xs">
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-700 transition-colors">
-                          {feat.title}
-                        </h3>
-                      </div>
-                      <p className="text-xs text-slate-600 mt-2 leading-relaxed font-normal">
-                        {feat.desc}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">
-                      {feat.badge}
-                    </span>
-                    <span className="text-xs font-bold text-purple-600 group-hover:translate-x-1 transition-transform">
-                      Active →
-                    </span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
         {/* 3 COLUMNS LOOK: RECENT PROJECTS GRID (3 COLUMNS) */}
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Recent Dubbing Projects</h2>
             {projects.length > 0 && (
@@ -311,133 +381,84 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {projects.length === 0 ? (
-            /* Empty State Onboarding Component */
-            <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center max-w-3xl mx-auto space-y-6 shadow-xs">
-              <div className="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto border border-purple-100">
-                <Film className="w-8 h-8" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-slate-900">Your first multilingual video starts here.</h3>
-                <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-                  Upload a video and Dubzeek will automatically handle speech extraction, translation, voice synthesis, and lip sync.
-                </p>
-              </div>
-
-              {/* Step Pipeline Preview */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left py-2">
-                {[
-                  { title: "1. Extract Audio", icon: FileVideo },
-                  { title: "2. Transcribe Speech", icon: FileText },
-                  { title: "3. Translate Dialogue", icon: Globe2 },
-                  { title: "4. Generate Voices", icon: Mic2 },
-                  { title: "5. Synchronize Audio", icon: Layers },
-                  { title: "6. Render Video", icon: Sparkles },
-                ].map((step, i) => {
-                  const StepIcon = step.icon;
-                  return (
-                    <div key={i} className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2 text-xs font-semibold text-slate-700">
-                      <StepIcon className="w-4 h-4 text-purple-600 shrink-0" />
-                      <span>{step.title}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <Link
-                href="/create-dubbing"
-                className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm px-8 py-3.5 rounded-2xl shadow-md shadow-purple-600/20 transition-all hover:scale-105"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                className="glass-card glass-card-hover bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-4 hover:border-purple-300 transition-all flex flex-col justify-between"
               >
-                <PlusCircle className="w-5 h-5" />
-                <span>Create Your First Dubbing</span>
-              </Link>
-            </div>
-          ) : (
-            /* 3 COLUMNS LOOK: PROJECTS GRID */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="glass-card glass-card-hover bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-4 hover:border-purple-300 transition-all flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    {/* Thumbnail & Status Badge */}
-                    <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden group">
-                      <img
-                        src={project.thumbnail}
-                        alt={project.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
-                      />
-                      <div className="absolute top-2.5 left-2.5">
-                        {getStatusBadge(project.status)}
-                      </div>
-                      <div className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 bg-black/80 backdrop-blur-xs text-white text-[10px] font-mono font-bold rounded-lg border border-white/20">
-                        {project.duration}
-                      </div>
+                <div className="space-y-3">
+                  <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden group">
+                    <img
+                      src={project.thumbnail}
+                      alt={project.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    />
+                    <div className="absolute top-2.5 left-2.5">
+                      {getStatusBadge(project.status)}
                     </div>
-
-                    {/* Project Metadata */}
-                    <div>
-                      <h3 className="font-bold text-sm text-slate-900 truncate" title={project.name}>
-                        {project.name}
-                      </h3>
-                      <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
-                        <span>{project.originalLanguage} → <strong className="text-purple-700 font-extrabold">{project.targetLanguage}</strong></span>
-                        <span className="text-[11px] text-slate-400 font-medium">{project.createdDate}</span>
-                      </div>
+                    <div className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 bg-black/80 backdrop-blur-xs text-white text-[10px] font-mono font-bold rounded-lg border border-white/20">
+                      {project.duration}
                     </div>
-
-                    {/* Progress Bar for Processing Projects */}
-                    {project.status === "Processing" && (
-                      <div className="space-y-1 pt-1">
-                        <div className="flex justify-between text-[11px] font-bold text-amber-700">
-                          <span>Synthesizing Voice & Lip Sync...</span>
-                          <span>{project.progressPercentage}%</span>
-                        </div>
-                        <div className="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-500 to-purple-600 rounded-full transition-all duration-500"
-                            style={{ width: `${project.progressPercentage}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Actions Footer */}
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <Link
-                      href={`/projects/${project.id}`}
-                      className="font-extrabold text-purple-600 hover:text-purple-800 flex items-center gap-1 group/btn"
-                    >
-                      <span>Open Studio Project</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                    </Link>
-
-                    <div className="flex items-center gap-1">
-                      {project.status === "Completed" && (
-                        <button
-                          onClick={() => alert("Downloading Dubbed Video (.MP4)...")}
-                          className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
-                          title="Download Dubbed Video"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(project.id)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                        title="Delete Project"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900 truncate" title={project.name}>
+                      {project.name}
+                    </h3>
+                    <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                      <span>{project.originalLanguage} → <strong className="text-purple-700 font-extrabold">{project.targetLanguage}</strong></span>
+                      <span className="text-[11px] text-slate-400 font-medium">{project.createdDate}</span>
                     </div>
+                  </div>
+
+                  {project.status === "Processing" && (
+                    <div className="space-y-1 pt-1">
+                      <div className="flex justify-between text-[11px] font-bold text-amber-700">
+                        <span>Synthesizing Voice & Lip Sync...</span>
+                        <span>{project.progressPercentage}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-purple-600 rounded-full transition-all duration-500"
+                          style={{ width: `${project.progressPercentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <Link
+                    href={`/projects/${project.id}`}
+                    className="font-extrabold text-purple-600 hover:text-purple-800 flex items-center gap-1 group/btn"
+                  >
+                    <span>Open Studio Project</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                  </Link>
+
+                  <div className="flex items-center gap-1">
+                    {project.status === "Completed" && (
+                      <button
+                        onClick={() => alert("Downloading Dubbed Video (.MP4)...")}
+                        className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                        title="Download Dubbed Video"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(project.id)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      title="Delete Project"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
 
       </div>
