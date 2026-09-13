@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sparkles, Film, X, Upload, ArrowRight } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
+import { FileCard } from "@/components/ui/file-card-collections";
 
 export default function CreateDubbingPage() {
   const router = useRouter();
@@ -91,20 +92,25 @@ export default function CreateDubbingPage() {
                 <div
                   key={col.pair}
                   onClick={() => handleCardClick(col)}
-                  className="w-full max-w-[240px] min-h-[290px] bg-transparent border-2 border-slate-200 hover:border-purple-600 rounded-[2rem] p-6 py-8 flex flex-col justify-between items-center text-center space-y-6 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative overflow-hidden"
+                  className="w-full max-w-[240px] min-h-[320px] bg-transparent border-2 border-slate-200 hover:border-purple-600 rounded-[2rem] p-6 py-7 flex flex-col justify-between items-center text-center space-y-4 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative overflow-hidden"
                 >
+                  {/* FileCard Component Graphic */}
+                  <div className="pt-1">
+                    <FileCard formatFile={col.pair} />
+                  </div>
+
                   {/* Language Display */}
-                  <div className="flex-1 flex flex-col items-center justify-center space-y-2">
-                    <span className="text-xl font-black text-slate-900 tracking-wider uppercase">
+                  <div className="flex-1 flex flex-col items-center justify-center space-y-1">
+                    <span className="text-lg font-black text-slate-900 tracking-wider uppercase">
                       {col.source}
                     </span>
                     
-                    <div className="my-1.5 px-3 py-1 bg-purple-50 rounded-full border border-purple-100 flex items-center gap-1 text-purple-700 font-extrabold text-xs">
+                    <div className="my-1 px-3 py-0.5 bg-purple-50 rounded-full border border-purple-100 flex items-center gap-1 text-purple-700 font-extrabold text-[11px]">
                       <span>👇</span>
                       <span>dub</span>
                     </div>
 
-                    <span className="text-xl font-black text-purple-700 tracking-wider uppercase">
+                    <span className="text-lg font-black text-purple-700 tracking-wider uppercase">
                       {col.target}
                     </span>
                   </div>
