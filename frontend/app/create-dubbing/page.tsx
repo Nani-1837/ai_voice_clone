@@ -85,35 +85,38 @@ export default function CreateDubbingPage() {
               </span>
             </div>
 
-            {/* 3 Columns Grid Layout with 12 Transparent Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* 4 Columns Grid Layout with Taller, Narrower Portrait Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 justify-items-center">
               {dubbingCollections.map((col) => (
                 <div
                   key={col.pair}
                   onClick={() => handleCardClick(col)}
-                  className="bg-transparent border-2 border-slate-200 hover:border-purple-500 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-5 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 relative overflow-hidden"
+                  className="w-full max-w-[240px] min-h-[290px] bg-transparent border-2 border-slate-200 hover:border-purple-600 rounded-[2rem] p-6 py-8 flex flex-col justify-between items-center text-center space-y-6 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer group hover:-translate-y-2 relative overflow-hidden"
                 >
                   {/* Language Display */}
-                  <div className="flex flex-col items-center justify-center space-y-1">
-                    <span className="text-lg font-black text-slate-900 tracking-wide uppercase">
+                  <div className="flex-1 flex flex-col items-center justify-center space-y-2">
+                    <span className="text-xl font-black text-slate-900 tracking-wider uppercase">
                       {col.source}
                     </span>
-                    <span className="text-xs font-bold text-purple-600 flex items-center gap-1 my-1">
-                      <span className="text-sm">👇</span> dub
-                    </span>
-                    <span className="text-lg font-black text-purple-700 tracking-wide uppercase">
+                    
+                    <div className="my-1.5 px-3 py-1 bg-purple-50 rounded-full border border-purple-100 flex items-center gap-1 text-purple-700 font-extrabold text-xs">
+                      <span>👇</span>
+                      <span>dub</span>
+                    </div>
+
+                    <span className="text-xl font-black text-purple-700 tracking-wider uppercase">
                       {col.target}
                     </span>
                   </div>
 
                   {/* Format Button Badge */}
-                  <div className="w-full pt-2">
+                  <div className="w-full">
                     <button
                       type="button"
-                      className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 group-hover:bg-purple-700"
+                      className="w-full py-2.5 px-3 bg-purple-600 group-hover:bg-purple-700 text-white font-extrabold text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-1.5"
                     >
-                      <span>{col.pair}</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      <span className="truncate">{col.pair}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
                     </button>
                   </div>
                 </div>
