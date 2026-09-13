@@ -167,20 +167,62 @@ export default function CreateDubbingPage() {
             ].map((s) => (
               <button
                 key={s.step}
-                onClick={() => s.step < currentStep && setCurrentStep(s.step)}
-                disabled={s.step > currentStep}
-                className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center gap-1 ${
+                onClick={() => setCurrentStep(s.step)}
+                className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center gap-1 cursor-pointer ${
                   currentStep === s.step
                     ? "bg-purple-600 text-white shadow-xs"
                     : currentStep > s.step
                     ? "bg-purple-50 text-purple-700 hover:bg-purple-100"
-                    : "bg-slate-50 text-slate-400 opacity-60"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 <span className="text-[10px] font-extrabold uppercase">Step {s.step}</span>
                 <span className="text-xs truncate font-semibold">{s.label}</span>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Featured Multilingual Dubbing Collection Cards Section */}
+        <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg space-y-4">
+          <div>
+            <div className="flex items-center gap-2 text-purple-300 text-xs font-bold uppercase tracking-wider mb-1">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span>Instant Preset Collections</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+              Featured Multilingual Dubbing Collections
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+              Click any pre-configured collection card below to instantly set your source & target languages with zero-shot neural voice cloning models.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-2">
+            {dubbingCollections.map((col) => {
+              const isActive = sourceLang === col.source && targetLang === col.target;
+              return (
+                <FileCard
+                  key={col.pair}
+                  formatFile={col.pair}
+                  active={isActive}
+                  onClick={() => {
+                    setSourceLang(col.source);
+                    setTargetLang(col.target);
+                    if (!file) {
+                      setFile({
+                        name: "Product_Demo_Presentation.mp4",
+                        size: "45.2 MB",
+                        duration: "04:12",
+                        url: "/cropped_circle_image.png",
+                      });
+                    }
+                    setCurrentStep(2);
+                  }}
+                  className="w-full flex justify-center hover:scale-105 transition-transform"
+                />
+              );
+            })}
           </div>
         </div>
 
@@ -209,6 +251,19 @@ export default function CreateDubbingPage() {
                 <div className="space-y-1">
                   <p className="text-base font-bold text-slate-900">Drop your video here, or <span className="text-purple-600 underline">Browse Files</span></p>
                   <p className="text-xs text-slate-400">Supported formats: MP4, MOV, AVI, MKV (Up to 500 MB)</p>
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleBrowse();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Use Demo Sample Video</span>
+                  </button>
                 </div>
               </div>
             ) : (
