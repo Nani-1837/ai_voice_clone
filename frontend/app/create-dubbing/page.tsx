@@ -27,6 +27,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
+import { FileCard } from "@/components/ui/file-card-collections";
 
 export default function CreateDubbingPage() {
   const router = useRouter();
@@ -62,6 +63,19 @@ export default function CreateDubbingPage() {
   const popularLanguages = [
     "English", "Telugu", "Hindi", "Tamil", "Kannada", 
     "Malayalam", "Bengali", "Chinese", "Japanese", "Korean", "Spanish", "French", "German"
+  ];
+
+  const dubbingCollections = [
+    { pair: "Telugu -> English", source: "Telugu", target: "English" },
+    { pair: "English -> Telugu", source: "English", target: "Telugu" },
+    { pair: "Hindi -> English", source: "Hindi", target: "English" },
+    { pair: "English -> Hindi", source: "English", target: "Hindi" },
+    { pair: "Tamil -> Telugu", source: "Tamil", target: "Telugu" },
+    { pair: "Telugu -> Tamil", source: "Telugu", target: "Tamil" },
+    { pair: "Malayalam -> Telugu", source: "Malayalam", target: "Telugu" },
+    { pair: "Kannada -> Telugu", source: "Kannada", target: "Telugu" },
+    { pair: "Korean -> Telugu", source: "Korean", target: "Telugu" },
+    { pair: "Japanese -> English", source: "Japanese", target: "English" },
   ];
 
   const pipelineStages = [
@@ -304,6 +318,37 @@ export default function CreateDubbingPage() {
                     {lang}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Featured Multilingual Dubbing Collection Cards */}
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span>Popular Dubbing Collections & Presets</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Select a pre-configured multilingual collection card below to instantly set both source and target dubbing languages with optimal neural voice models.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+                {dubbingCollections.map((col) => {
+                  const isActive = sourceLang === col.source && targetLang === col.target;
+                  return (
+                    <FileCard
+                      key={col.pair}
+                      formatFile={col.pair}
+                      active={isActive}
+                      onClick={() => {
+                        setSourceLang(col.source);
+                        setTargetLang(col.target);
+                      }}
+                      className="w-full flex justify-center"
+                    />
+                  );
+                })}
               </div>
             </div>
 
