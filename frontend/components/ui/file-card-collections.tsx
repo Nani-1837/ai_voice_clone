@@ -188,8 +188,8 @@ export const FileCard = ({ formatFile, onClick, active = false, className, label
         className={cn(
           "relative z-10 w-24 h-28 rounded-2xl p-2.5 flex flex-col justify-between transition-all border shadow-xs overflow-hidden",
           active
-            ? "bg-purple-50/90 border-purple-500 ring-2 ring-purple-500/40 shadow-purple-500/20 shadow-md"
-            : "bg-white border-slate-200 hover:border-purple-300 hover:shadow-md"
+            ? "bg-purple-100/60 border-purple-500 ring-2 ring-purple-500/40 shadow-purple-500/20 shadow-md"
+            : "bg-transparent border-slate-200 hover:border-purple-400 hover:bg-purple-50/30 hover:shadow-md"
         )}
       >
         {/* Placeholder Content Graphic */}
