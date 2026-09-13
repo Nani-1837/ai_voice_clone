@@ -88,3 +88,81 @@ export async function logoutUser() {
     }
   }
 }
+
+/**
+ * Resumable Chunked Video Upload Helper (Up to 3 GB)
+ */
+export async function uploadVideoResumable(
+  file: File,
+  sourceLang: string = "English",
+  targetLang: string = "Telugu",
+  projectId: string = "dub-default",
+  onProgress?: (progress: number) => void
+): Promise<any> {
+  const apiBaseUrl = getApiBaseUrl();
+
+  // 1. Initialize upload session
+  const initRes = await fetch(`${apiBaseUrl}/api/video/upload-init`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filename: file.name,
+      file_size: file.size,
+      project_id: projectId,
+      source_language: sourceLang,
+      target_language: targetLang,
+    }),
+  });
+
+  if (!initRes.ok) {
+    const errData = await initRes.json();
+    throw new Error(errData.detail || "Failed to initialize upload session");
+  }
+
+  const { upload_id, chunk_size, total_chunks } = await initRes.json();
+
+  // 2. Upload chunks in sequence
+  for (let i = 0; i < total_chunks; i++) {
+    const start = i * chunk_size;
+    const end = Math.min(file.size, start + chunk_size);
+    const chunkBlob = file.slice(start, end);
+
+    const formData = new FormData();
+    formData.append("upload_id", upload_id);
+    formData.append("chunk_index", i.toString());
+    formData.append("chunk_file", chunkBlob, file.name);
+
+    const chunkRes = await fetch(`${apiBaseUrl}/api/video/upload-chunk`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!chunkRes.ok) {
+      throw new Error(`Chunk ${i + 1}/${total_chunks} upload failed`);
+    }
+
+    if (onProgress) {
+      onProgress(Math.round(((i + 1) / total_chunks) * 100));
+    }
+  }
+
+  // 3. Finalize upload and save metadata to Neon DB
+  const completeRes = await fetch(`${apiBaseUrl}/api/video/upload-complete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      upload_id,
+      filename: file.name,
+      project_id: projectId,
+      source_language: sourceLang,
+      target_language: targetLang,
+    }),
+  });
+
+  if (!completeRes.ok) {
+    const completeErr = await completeRes.json();
+    throw new Error(completeErr.detail || "Failed to finalize video assembly and save DB record");
+  }
+
+  return await completeRes.json();
+}

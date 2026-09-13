@@ -1,44 +1,36 @@
 import datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Optional, List
+from pydantic import BaseModel, EmailStr, Field
 
-class RegisterRequest(BaseModel):
-    full_name: str = Field(..., min_length=2, max_length=100)
-    email: EmailStr
-    password: str = Field(..., min_length=8)
-    primary_language: Optional[str] = "Telugu"
-
+# Auth Schemas
 class SendOTPRequest(BaseModel):
     email: EmailStr
 
 class VerifyOTPRequest(BaseModel):
     email: EmailStr
     otp_code: str = Field(..., min_length=6, max_length=6)
-    full_name: str = Field(..., min_length=2, max_length=100)
-    password: str = Field(..., min_length=8)
+    full_name: Optional[str] = "User"
+    password: Optional[str] = "defaultpass123"
     primary_language: Optional[str] = "Telugu"
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-class UserResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    public_id: Optional[str] = None
-    full_name: str
-    email: str
-    primary_language: str
-    is_verified: bool
-    created_at: datetime.datetime
-
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    refresh_token: Optional[str] = None
-    user: UserResponse
+    user: dict
 
+class UserResponse(BaseModel):
+    id: int
+    public_id: str
+    full_name: str
+    email: str
+    primary_language: str
+    is_active: bool
+
+# Video Upload & Resumable Session Schemas
 class InitUploadRequest(BaseModel):
     filename: str
     file_size: int
@@ -60,11 +52,9 @@ class CompleteUploadRequest(BaseModel):
     target_language: Optional[str] = "Telugu"
 
 class VideoResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: str
     project_id: str
-    user_id: Optional[str] = None
+    user_id: Optional[str]
     original_filename: str
     file_size: int
     storage_path: str
@@ -74,4 +64,5 @@ class VideoResponse(BaseModel):
     progress: int
     created_at: datetime.datetime
 
-
+    class Config:
+        from_attributes = True

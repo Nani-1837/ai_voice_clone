@@ -51,6 +51,8 @@ export interface HeroCarouselProps {
   autoplayDelay?: number
   /** Extra classes for the stage. @default undefined */
   className?: string
+  /** Fires when a carousel card is clicked. @default undefined */
+  onItemClick?: (item: HeroCarouselItem, index: number) => void
 }
 
 /* Ratios lifted from the reference layout, all relative to the stage box. */
@@ -85,6 +87,7 @@ export function HeroCarousel({
   autoplay = false,
   autoplayDelay = 4000,
   className,
+  onItemClick,
 }: HeroCarouselProps) {
   const stageRef = React.useRef<HTMLDivElement>(null)
   const [box, setBox] = React.useState({ w: 0, h: 0 })
@@ -359,7 +362,10 @@ export function HeroCarousel({
               type="button"
               aria-label={item.title.replace(/\n/g, " ")}
               aria-current={i === index}
-              onClick={() => go(i)}
+              onClick={() => {
+                go(i);
+                onItemClick?.(item, i);
+              }}
               className={cn(
                 "relative shrink-0 overflow-hidden rounded-2xl bg-white border-2 transition-all shadow-md",
                 i === index ? "border-purple-600 shadow-xl ring-4 ring-purple-500/20" : "border-slate-200 opacity-90 hover:opacity-100"

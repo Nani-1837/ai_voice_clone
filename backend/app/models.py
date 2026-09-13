@@ -1,14 +1,12 @@
 import datetime
 import uuid
-from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, ForeignKey
-from database import Base
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime
+from app.database import Base
 
 class User(Base):
     __tablename__ = "users"
 
-    # 64-bit BigInteger primary key for scalable high-cardinality storage
     id = Column(BigInteger, primary_key=True, index=True)
-    # Unguessable 128-bit UUID4 public identifier to prevent ID enumeration scraping
     public_id = Column(String(36), unique=True, index=True, default=lambda: str(uuid.uuid4()))
     
     full_name = Column(String(255), nullable=False)
@@ -28,7 +26,7 @@ class OTPVerification(Base):
     otp_code = Column(String(10), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     is_used = Column(Boolean, default=False)
-    failed_attempts = Column(Integer, default=0) # Tracks wrong attempts to prevent brute-forcing
+    failed_attempts = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class RefreshToken(Base):
@@ -42,19 +40,18 @@ class RefreshToken(Base):
     is_revoked = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+# Video Metadata Table for Neon Database
 class Video(Base):
     __tablename__ = "videos"
 
-    id = Column(String(64), primary_key=True, default=lambda: f"vid_{uuid.uuid4().hex[:12]}")
-    project_id = Column(String(64), nullable=False, default="dub-default")
-    user_id = Column(String(64), nullable=True, default="guest_user")
+    id = Column(String(64), primary_key=True, index=True, default=lambda: f"vid_{uuid.uuid4().hex[:12]}")
+    project_id = Column(String(64), index=True, nullable=False)
+    user_id = Column(String(64), index=True, nullable=True)
     original_filename = Column(String(255), nullable=False)
     file_size = Column(BigInteger, nullable=False)
     storage_path = Column(String(512), nullable=False)
     source_language = Column(String(100), default="English")
     target_language = Column(String(100), default="Telugu")
-    status = Column(String(50), default="uploaded")
+    status = Column(String(50), default="uploaded")  # uploaded, processing, completed, failed
     progress = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-
