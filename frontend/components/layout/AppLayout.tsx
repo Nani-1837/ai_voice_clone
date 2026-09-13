@@ -5,24 +5,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard,
-  FolderKanban,
-  PlusCircle,
-  Video,
-  Mic2,
-  Globe2,
-  BarChart3,
-  Settings,
-  HelpCircle,
   Search,
   Bell,
   User,
   LogOut,
   ChevronDown,
-  Menu,
-  X,
   Sparkles,
-  ShieldCheck,
+  HelpCircle,
   CheckCircle2
 } from "lucide-react";
 import { logoutUser } from "@/lib/api";
@@ -38,7 +27,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [user, setUser] = useState<{ full_name?: string; email?: string } | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -52,18 +40,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
       }
     }
   }, []);
-
-  const navItems = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Projects", href: "/projects", icon: FolderKanban },
-    { label: "Create Dubbing", href: "/create-dubbing", icon: PlusCircle, highlight: true },
-    { label: "My Videos", href: "/videos", icon: Video },
-    { label: "Voice Library", href: "/voice-library", icon: Mic2 },
-    { label: "Languages", href: "/languages", icon: Globe2 },
-    { label: "Usage", href: "/usage", icon: BarChart3 },
-    { label: "Settings", href: "/settings", icon: Settings },
-    { label: "Help Center", href: "/help", icon: HelpCircle },
-  ];
 
   const handleLogout = async () => {
     await logoutUser();
@@ -83,15 +59,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col antialiased">
       {/* Top Header Bar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between shadow-xs">
-        {/* Left Logo & Mobile Toggle */}
+        {/* Left Logo */}
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-            className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-          >
-            {mobileSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
             <img
               src="/cropped_circle_image.png"
