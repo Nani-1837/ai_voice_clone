@@ -182,6 +182,28 @@ def stream_video(video_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video file not found")
     return FileResponse(video.storage_path, media_type="video/mp4")
 
+@router.get("/audio/{video_id}")
+def stream_audio(video_id: str, db: Session = Depends(get_db)):
+    """
+    Streams the extracted audio (.mp3) file directly by video ID.
+    """
+    video = db.query(Video).filter(Video.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+    
+    # Try video.audio_path first, fallback to extract if needed
+    audio_path = video.audio_path
+    if not audio_path or not os.path.exists(audio_path):
+        audio_path = storage_service.extract_audio_from_video(video.storage_path)
+        if audio_path:
+            video.audio_path = audio_path
+            db.commit()
+
+    if not audio_path or not os.path.exists(audio_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio file not found or extraction failed")
+
+    return FileResponse(audio_path, media_type="audio/mpeg")
+
 @router.post("/transcribe/{video_id}", response_model=TranscribeResponse)
 def transcribe_video(
     video_id: str,
