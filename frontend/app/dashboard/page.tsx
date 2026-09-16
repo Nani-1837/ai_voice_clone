@@ -53,39 +53,8 @@ interface Project {
 
 export default function DashboardPage() {
   const [userName, setUserName] = useState("Creator");
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: "dub-948201",
-      name: "AI & Quantum Computing Intro.mp4",
-      thumbnail: "/Telugu-Movies.jpg",
-      originalLanguage: "English",
-      targetLanguage: "Telugu (తెలుగు)",
-      duration: "04:12",
-      status: "Completed",
-      createdDate: "Sep 12, 2026",
-    },
-    {
-      id: "dub-948202",
-      name: "Global Education Keynote.mp4",
-      thumbnail: "/Hindhi-Movies.jpg",
-      originalLanguage: "English",
-      targetLanguage: "Hindi (हिंदी)",
-      duration: "08:45",
-      status: "Processing",
-      progressPercentage: 68,
-      createdDate: "Sep 12, 2026",
-    },
-    {
-      id: "dub-948203",
-      name: "Product Walkthrough Reel.mp4",
-      thumbnail: "/Japanies-Movie.jpg",
-      originalLanguage: "English",
-      targetLanguage: "Tamil (தமிழ்)",
-      duration: "02:30",
-      status: "Draft",
-      createdDate: "Sep 11, 2026",
-    },
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("dubzeek_user");
@@ -99,6 +68,29 @@ export default function DashboardPage() {
         console.error("Failed to parse user", e);
       }
     }
+
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    fetch(`${apiBaseUrl}/api/video/list`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const formatted: Project[] = data.map((item: any) => ({
+            id: item.id,
+            name: item.original_filename || "Untitled Video.mp4",
+            thumbnail: "/cropped_circle_image.png",
+            originalLanguage: item.source_language || "English",
+            targetLanguage: item.target_language || "Telugu",
+            duration: item.file_size ? `${(item.file_size / (1024 * 1024)).toFixed(1)} MB` : "HD Video",
+            status: item.status === "transcribed" ? "Completed" : "Completed",
+            createdDate: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Sep 2026",
+          }));
+          setProjects(formatted);
+        } else {
+          setProjects([]);
+        }
+      })
+      .catch(() => setProjects([]))
+      .finally(() => setIsLoading(false));
   }, []);
 
   // Card-Style Navigation Grid Tiles (Replacing the left-side sidebar)
@@ -381,84 +373,101 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="glass-card glass-card-hover bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-4 hover:border-purple-300 transition-all flex flex-col justify-between"
+          {projects.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-3 shadow-2xs">
+              <Film className="w-10 h-10 text-purple-400 mx-auto" />
+              <h3 className="text-base font-bold text-slate-900">No Active Projects</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                You have no active video dubbing projects. Create a new dubbing project to get started with zero-shot voice cloning!
+              </p>
+              <Link
+                href="/create-dubbing"
+                className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-xs"
               >
-                <div className="space-y-3">
-                  <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden group">
-                    <img
-                      src={project.thumbnail}
-                      alt={project.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
-                    />
-                    <div className="absolute top-2.5 left-2.5">
-                      {getStatusBadge(project.status)}
-                    </div>
-                    <div className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 bg-black/80 backdrop-blur-xs text-white text-[10px] font-mono font-bold rounded-lg border border-white/20">
-                      {project.duration}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900 truncate" title={project.name}>
-                      {project.name}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
-                      <span>{project.originalLanguage} → <strong className="text-purple-700 font-extrabold">{project.targetLanguage}</strong></span>
-                      <span className="text-[11px] text-slate-400 font-medium">{project.createdDate}</span>
-                    </div>
-                  </div>
-
-                  {project.status === "Processing" && (
-                    <div className="space-y-1 pt-1">
-                      <div className="flex justify-between text-[11px] font-bold text-amber-700">
-                        <span>Synthesizing Voice & Lip Sync...</span>
-                        <span>{project.progressPercentage}%</span>
+                <PlusCircle className="w-4 h-4" />
+                <span>Create New Dubbing Project</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((project) => (
+                <div
+                  key={project.id}
+                  className="glass-card glass-card-hover bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-4 hover:border-purple-300 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden group">
+                      <img
+                        src={project.thumbnail}
+                        alt={project.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                      />
+                      <div className="absolute top-2.5 left-2.5">
+                        {getStatusBadge(project.status)}
                       </div>
-                      <div className="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-amber-500 to-purple-600 rounded-full transition-all duration-500"
-                          style={{ width: `${project.progressPercentage}%` }}
-                        ></div>
+                      <div className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 bg-black/80 backdrop-blur-xs text-white text-[10px] font-mono font-bold rounded-lg border border-white/20">
+                        {project.duration}
                       </div>
                     </div>
-                  )}
-                </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <Link
-                    href={`/projects/${project.id}`}
-                    className="font-extrabold text-purple-600 hover:text-purple-800 flex items-center gap-1 group/btn"
-                  >
-                    <span>Open Studio Project</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                  </Link>
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-900 truncate" title={project.name}>
+                        {project.name}
+                      </h3>
+                      <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                        <span>{project.originalLanguage} → <strong className="text-purple-700 font-extrabold">{project.targetLanguage}</strong></span>
+                        <span className="text-[11px] text-slate-400 font-medium">{project.createdDate}</span>
+                      </div>
+                    </div>
 
-                  <div className="flex items-center gap-1">
-                    {project.status === "Completed" && (
-                      <button
-                        onClick={() => alert("Downloading Dubbed Video (.MP4)...")}
-                        className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
-                        title="Download Dubbed Video"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
+                    {project.status === "Processing" && (
+                      <div className="space-y-1 pt-1">
+                        <div className="flex justify-between text-[11px] font-bold text-amber-700">
+                          <span>Synthesizing Voice & Lip Sync...</span>
+                          <span>{project.progressPercentage}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-amber-500 to-purple-600 rounded-full transition-all duration-500"
+                            style={{ width: `${project.progressPercentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
                     )}
-                    <button
-                      onClick={() => handleDelete(project.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                      title="Delete Project"
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <Link
+                      href={`/projects/${project.id}`}
+                      className="font-extrabold text-purple-600 hover:text-purple-800 flex items-center gap-1 group/btn"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      <span>Open Studio Project</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                    </Link>
+
+                    <div className="flex items-center gap-1">
+                      {project.status === "Completed" && (
+                        <button
+                          onClick={() => alert("Downloading Dubbed Video (.MP4)...")}
+                          className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                          title="Download Dubbed Video"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(project.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Delete Project"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

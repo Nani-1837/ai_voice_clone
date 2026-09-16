@@ -166,7 +166,6 @@ export default function CreateDubbingPage() {
 
     try {
       if (selectedRealFile) {
-        // Upload real movie/video file up to 3 GB with chunking
         const dbVideo = await uploadVideoResumable(
           selectedRealFile,
           sourceLang,
@@ -174,6 +173,15 @@ export default function CreateDubbingPage() {
           "dub-default",
           (progress) => setProcessingProgress(progress)
         );
+
+        if (dbVideo && dbVideo.id) {
+          try {
+            const localPreview = URL.createObjectURL(selectedRealFile);
+            sessionStorage.setItem(`preview_video_${dbVideo.id}`, localPreview);
+          } catch (e) {
+            console.error("Local preview storage error:", e);
+          }
+        }
 
         setTimeout(() => {
           router.push(`/projects/${dbVideo.id || "dub-948201"}`);

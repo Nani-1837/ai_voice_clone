@@ -3,6 +3,7 @@ import json
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -170,6 +171,16 @@ def get_video_details(video_id: str, db: Session = Depends(get_db)):
     if not video:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
     return video
+
+@router.get("/stream/{video_id}")
+def stream_video(video_id: str, db: Session = Depends(get_db)):
+    """
+    Streams the raw MP4 video file directly by video ID with byte range and content headers.
+    """
+    video = db.query(Video).filter(Video.id == video_id).first()
+    if not video or not video.storage_path or not os.path.exists(video.storage_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video file not found")
+    return FileResponse(video.storage_path, media_type="video/mp4")
 
 @router.post("/transcribe/{video_id}", response_model=TranscribeResponse)
 def transcribe_video(

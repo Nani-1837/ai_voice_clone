@@ -30,7 +30,19 @@ export default function ProjectDetailsPage() {
   useEffect(() => {
     if (!projectId) return;
 
-    fetch(`http://localhost:8000/api/video/${projectId}`)
+    // Check if we have an instant local ObjectURL preview from recent upload session
+    try {
+      const cachedPreview = sessionStorage.getItem(`preview_video_${projectId}`);
+      if (cachedPreview) {
+        setVideoUrl(cachedPreview);
+      }
+    } catch (e) {
+      console.warn("Could not read local preview cache:", e);
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    fetch(`${baseUrl}/api/video/${projectId}`)
       .then((res) => {
         if (res.ok) return res.json();
         return null;
@@ -38,14 +50,28 @@ export default function ProjectDetailsPage() {
       .then((data) => {
         if (data && data.original_filename) {
           setProjectName(data.original_filename);
-          const filename = data.storage_path.split(/[/\\]/).pop();
-          if (filename) {
-            setVideoUrl(`http://localhost:8000/uploads/original/${filename}`);
+          // Stream directly from API streaming endpoint
+          const streamUrl = `${baseUrl}/api/video/stream/${projectId}`;
+          const fallbackUrl = `${baseUrl}/uploads/original/${data.storage_path?.split(/[/\\]/).pop()}`;
+          
+          // Use stream URL unless local preview is active
+          try {
+            if (!sessionStorage.getItem(`preview_video_${projectId}`)) {
+              setVideoUrl(streamUrl);
+            }
+          } catch {
+            setVideoUrl(streamUrl);
           }
         }
       })
       .catch(() => {
-        setVideoUrl("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
+        try {
+          if (!sessionStorage.getItem(`preview_video_${projectId}`)) {
+            setVideoUrl("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
+          }
+        } catch {
+          setVideoUrl("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
+        }
       });
   }, [projectId]);
 
