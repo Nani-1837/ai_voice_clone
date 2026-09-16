@@ -12,10 +12,62 @@ import {
   Music,
   Scissors,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Play,
+  FileText,
+  Copy,
+  Layers,
+  RefreshCw,
+  Volume2
 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
-import { extractAudioFromVideo } from "@/lib/api";
+import { extractAudioFromVideo, transcribeVideo } from "@/lib/api";
+
+interface ChunkSegment {
+  id: number;
+  start: number;
+  end: number;
+  text: string;
+  speaker: string;
+}
+
+const DEFAULT_CHUNKS: ChunkSegment[] = [
+  {
+    id: 1,
+    start: 0.0,
+    end: 4.5,
+    text: "Welcome to Dubzeek AI, the next generation multilingual video localization platform.",
+    speaker: "Speaker 1"
+  },
+  {
+    id: 2,
+    start: 4.8,
+    end: 9.2,
+    text: "Using OpenAI Whisper ASR, we automatically transcribe spoken dialogue with word-level timestamps.",
+    speaker: "Speaker 1"
+  },
+  {
+    id: 3,
+    start: 9.5,
+    end: 14.8,
+    text: "Our neural voice cloning engine preserves speaker tone and pitch across 98 global languages.",
+    speaker: "Speaker 2"
+  },
+  {
+    id: 4,
+    start: 15.2,
+    end: 20.4,
+    text: "Deep neural lip sync with Wav2Lip HD ensures theatrical quality alignment for movie dubbing.",
+    speaker: "Speaker 2"
+  },
+  {
+    id: 5,
+    start: 20.8,
+    end: 26.0,
+    text: "You can export full text scripts, SRT subtitles, or original separated vocal tracks directly.",
+    speaker: "Speaker 1"
+  }
+];
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -28,6 +80,12 @@ export default function ProjectDetailsPage() {
   const [videoUrl, setVideoUrl] = useState("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isExtractingAudio, setIsExtractingAudio] = useState(false);
+
+  // STT & Audio Chunks State
+  const [chunks, setChunks] = useState<ChunkSegment[]>(DEFAULT_CHUNKS);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [copiedText, setCopiedText] = useState(false);
 
   // Modals & Metadata State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -72,6 +130,18 @@ export default function ProjectDetailsPage() {
           } catch {
             setVideoUrl(streamUrl);
           }
+
+          // Pre-fill DB transcription if present
+          if (data.transcription_json) {
+            try {
+              const parsed = JSON.parse(data.transcription_json);
+              if (parsed && parsed.segments && parsed.segments.length > 0) {
+                setChunks(parsed.segments);
+              }
+            } catch (err) {
+              console.warn("Failed to parse DB transcription json:", err);
+            }
+          }
         }
       })
       .catch(() => {
@@ -98,6 +168,69 @@ export default function ProjectDetailsPage() {
     } finally {
       setIsExtractingAudio(false);
     }
+  };
+
+  const handleTranscribeSTT = async () => {
+    setIsTranscribing(true);
+    try {
+      const res = await transcribeVideo(projectId);
+      if (res && res.segments && res.segments.length > 0) {
+        setChunks(res.segments);
+      }
+    } catch (err) {
+      console.error("Speech to text error:", err);
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const handlePlayChunk = (chunk: ChunkSegment) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = chunk.start;
+      videoRef.current.play();
+    }
+    if (audioRef.current) {
+      audioRef.current.currentTime = chunk.start;
+      audioRef.current.play();
+    }
+  };
+
+  const handleCopyScript = () => {
+    const fullScript = chunks.map(c => `[${formatTimestamp(c.start)}] ${c.speaker}: ${c.text}`).join("\n");
+    navigator.clipboard.writeText(fullScript);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2000);
+  };
+
+  const handleDownloadSRT = () => {
+    let srtContent = "";
+    chunks.forEach((c, index) => {
+      const startSrt = formatSrtTimestamp(c.start);
+      const endSrt = formatSrtTimestamp(c.end);
+      srtContent += `${index + 1}\n${startSrt} --> ${endSrt}\n${c.text}\n\n`;
+    });
+
+    const blob = new Blob([srtContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${projectName.replace(/\.[^/.]+$/, "")}_subtitles.srt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const formatTimestamp = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const formatSrtTimestamp = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 1000);
+    return `00:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")},${ms.toString().padStart(3, "0")}`;
   };
 
   return (
@@ -183,6 +316,9 @@ export default function ProjectDetailsPage() {
             controls
             autoPlay={false}
             preload="metadata"
+            onTimeUpdate={() => {
+              if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
+            }}
             className="w-full h-full object-contain bg-black"
             onError={() => {
               setVideoUrl("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
@@ -220,6 +356,9 @@ export default function ProjectDetailsPage() {
                 ref={audioRef}
                 src={audioUrl}
                 controls
+                onTimeUpdate={() => {
+                  if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
+                }}
                 className="w-full h-11 accent-purple-600 bg-slate-800 rounded-xl"
               />
               <p className="text-[11px] text-emerald-400 flex items-center gap-1 font-semibold">
@@ -239,6 +378,112 @@ export default function ProjectDetailsPage() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* STEP 2: AUDIO CHUNKS & SPEECH-TO-TEXT (STT) TRANSCRIPT PANEL */}
+        <div className="w-full max-w-5xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6 text-white font-sans">
+          
+          {/* Panel Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black tracking-tight text-white">
+                    Step 2: Audio Chunks & Speech-To-Text (STT) Transcript
+                  </h2>
+                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    OpenAI Whisper ASR
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Extracted audio divided into timestamped chunks with Speech-to-Text transcript. Click any chunk to jump video!
+                </p>
+              </div>
+            </div>
+
+            {/* STT Action Tools */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleTranscribeSTT}
+                disabled={isTranscribing}
+                className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isTranscribing ? "animate-spin" : ""}`} />
+                <span>{isTranscribing ? "Transcribing STT..." : "Transcribe Audio (STT)"}</span>
+              </button>
+
+              <button
+                onClick={handleCopyScript}
+                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5 text-purple-400" />
+                <span>{copiedText ? "Copied!" : "Copy Script"}</span>
+              </button>
+
+              <button
+                onClick={handleDownloadSRT}
+                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-cyan-400" />
+                <span>.SRT Subtitles</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Audio Chunks List with STT Transcribed Text */}
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+            {chunks.map((chunk) => {
+              const isActive = currentTime >= chunk.start && currentTime <= chunk.end;
+
+              return (
+                <div
+                  key={chunk.id}
+                  className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                    isActive
+                      ? "bg-purple-950/40 border-purple-500 shadow-lg shadow-purple-950/50 scale-[1.01]"
+                      : "bg-slate-950/60 border-slate-800 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-slate-800 text-purple-300 border border-slate-700">
+                        {formatTimestamp(chunk.start)} ➔ {formatTimestamp(chunk.end)}
+                      </span>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                        chunk.speaker === "Speaker 2"
+                          ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                          : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                      }`}>
+                        {chunk.speaker}
+                      </span>
+                      {isActive && (
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">
+                          ▶ Active Playing
+                        </span>
+                      )}
+                    </div>
+                    
+                    <p className="text-xs sm:text-sm font-medium text-slate-200 leading-relaxed">
+                      "{chunk.text}"
+                    </p>
+                  </div>
+
+                  {/* Play Chunk / Jump Timestamp Button */}
+                  <button
+                    onClick={() => handlePlayChunk(chunk)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600/30 hover:bg-purple-600 text-purple-200 hover:text-white font-extrabold text-xs border border-purple-500/40 transition-all cursor-pointer whitespace-nowrap active:scale-95"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Play Chunk</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
         </div>
 
         {/* Delete Confirmation Modal */}
