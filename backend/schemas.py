@@ -59,6 +59,20 @@ class CompleteUploadRequest(BaseModel):
     source_language: Optional[str] = "English"
     target_language: Optional[str] = "Telugu"
 
+class TranscriptionSegment(BaseModel):
+    id: int
+    start: float
+    end: float
+    text: str
+    speaker: Optional[str] = "Speaker 1"
+
+class TranscribeResponse(BaseModel):
+    video_id: str
+    language: str
+    duration: float
+    full_text: str
+    segments: List[TranscriptionSegment]
+
 class VideoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -72,6 +86,8 @@ class VideoResponse(BaseModel):
     target_language: str
     status: str
     progress: int
+    transcription_json: Optional[str] = None
     created_at: datetime.datetime
+
 
 

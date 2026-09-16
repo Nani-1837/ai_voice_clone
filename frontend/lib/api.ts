@@ -166,3 +166,22 @@ export async function uploadVideoResumable(
 
   return await completeRes.json();
 }
+
+/**
+ * Trigger OpenAI Whisper Video-to-Text Transcription ASR
+ */
+export async function transcribeVideo(videoId: string): Promise<any> {
+  const apiBaseUrl = getApiBaseUrl();
+  const res = await fetch(`${apiBaseUrl}/api/video/transcribe/${videoId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to transcribe video");
+  }
+
+  return await res.json();
+}
+

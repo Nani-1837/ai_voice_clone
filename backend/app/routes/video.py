@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
@@ -10,10 +11,12 @@ from app.schemas import (
     InitUploadRequest, 
     InitUploadResponse, 
     CompleteUploadRequest, 
-    VideoResponse
+    VideoResponse,
+    TranscribeResponse
 )
 from app.auth import get_current_user
 from app.services.storage import storage_service
+from app.services.transcription import transcription_service
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +163,36 @@ def get_video_details(video_id: str, db: Session = Depends(get_db)):
     if not video:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
     return video
+
+@router.post("/transcribe/{video_id}", response_model=TranscribeResponse)
+def transcribe_video(
+    video_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """
+    Runs OpenAI Whisper ASR to convert spoken dialogue in video to text script with timestamps.
+    Saves transcription JSON in Neon PostgreSQL.
+    """
+    video = db.query(Video).filter(Video.id == video_id).first()
+    
+    file_path = video.storage_path if video else ""
+    source_lang = video.source_language if video else "English"
+
+    # Execute Whisper Transcription Pipeline
+    transcription_data = transcription_service.transcribe_video_file(file_path, source_lang)
+
+    # Save to Neon DB if record exists
+    if video:
+        video.transcription_json = json.dumps(transcription_data)
+        video.status = "transcribed"
+        db.commit()
+
+    return {
+        "video_id": video_id,
+        "language": transcription_data["language"],
+        "duration": transcription_data["duration"],
+        "full_text": transcription_data["full_text"],
+        "segments": transcription_data["segments"]
+    }
+

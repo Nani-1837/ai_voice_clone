@@ -55,6 +55,8 @@ class Video(Base):
     target_language = Column(String(100), default="Telugu")
     status = Column(String(50), default="uploaded")
     progress = Column(Integer, default=0)
+    transcription_json = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 
 

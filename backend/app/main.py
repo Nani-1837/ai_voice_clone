@@ -24,6 +24,7 @@ with engine.connect() as conn:
     try:
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS public_id VARCHAR(36);"))
         conn.execute(text("ALTER TABLE otp_verifications ADD COLUMN IF NOT EXISTS failed_attempts INTEGER DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE videos ADD COLUMN IF NOT EXISTS transcription_json TEXT;"))
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS videos (
                 id VARCHAR(64) PRIMARY KEY,
@@ -36,6 +37,7 @@ with engine.connect() as conn:
                 target_language VARCHAR(100) DEFAULT 'Telugu',
                 status VARCHAR(50) DEFAULT 'uploaded',
                 progress INTEGER DEFAULT 0,
+                transcription_json TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
