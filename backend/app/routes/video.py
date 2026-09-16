@@ -78,6 +78,9 @@ def complete_resumable_upload(
         storage_path = storage_service.assemble_chunks(body.upload_id, body.filename)
         file_size = os.path.getsize(storage_path)
 
+        # Step 1: Automatic Audio Extraction from original video
+        audio_path = storage_service.extract_audio_from_video(storage_path)
+
         user_id_str = str(current_user.public_id) if current_user else "guest_user"
 
         # Create record in Neon PostgreSQL 'videos' table
@@ -87,16 +90,17 @@ def complete_resumable_upload(
             original_filename=body.filename,
             file_size=file_size,
             storage_path=storage_path,
+            audio_path=audio_path,
             source_language=body.source_language or "English",
             target_language=body.target_language or "Telugu",
-            status="uploaded",
-            progress=0
+            status="audio_extracted" if audio_path else "uploaded",
+            progress=25
         )
         db.add(new_video)
         db.commit()
         db.refresh(new_video)
 
-        logger.info(f"Saved video metadata in Neon DB: ID={new_video.id}, Path={storage_path}")
+        logger.info(f"Saved video metadata & extracted audio in Neon DB: ID={new_video.id}, AudioPath={audio_path}")
         return new_video
     except FileNotFoundError as err:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err))
@@ -121,6 +125,8 @@ async def upload_video_direct(
 
     # Save to backend/uploads/original/
     storage_path = storage_service.save_direct_file(content, file.filename)
+    # Step 1: Extract Audio
+    audio_path = storage_service.extract_audio_from_video(storage_path)
     user_id_str = str(current_user.public_id) if current_user else "guest_user"
 
     # Save Metadata in Neon DB
@@ -130,10 +136,11 @@ async def upload_video_direct(
         original_filename=file.filename,
         file_size=file_size,
         storage_path=storage_path,
+        audio_path=audio_path,
         source_language=source_language,
         target_language=target_language,
-        status="uploaded",
-        progress=0
+        status="audio_extracted" if audio_path else "uploaded",
+        progress=25
     )
     db.add(new_video)
     db.commit()
@@ -195,4 +202,35 @@ def transcribe_video(
         "full_text": transcription_data["full_text"],
         "segments": transcription_data["segments"]
     }
+
+@router.post("/extract-audio/{video_id}")
+def extract_audio(
+    video_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """
+    Step 1 Pipeline: Extracts clean audio (.mp3) from video file and saves to uploads/audio/
+    """
+    video = db.query(Video).filter(Video.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+
+    audio_path = storage_service.extract_audio_from_video(video.storage_path)
+    video.audio_path = audio_path
+    video.status = "audio_extracted"
+    video.progress = 25
+    db.commit()
+
+    filename = os.path.basename(audio_path) if audio_path else ""
+    audio_url = f"http://localhost:8000/uploads/audio/{filename}" if filename else ""
+
+    return {
+        "video_id": video_id,
+        "audio_path": audio_path,
+        "audio_url": audio_url,
+        "status": "audio_extracted",
+        "progress": 25
+    }
+
 

@@ -76,8 +76,10 @@ class VideoResponse(BaseModel):
     target_language: str
     status: str
     progress: int
+    audio_path: Optional[str] = None
     transcription_json: Optional[str] = None
     created_at: datetime.datetime
+
 
     class Config:
         from_attributes = True

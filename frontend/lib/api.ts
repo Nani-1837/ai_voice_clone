@@ -185,3 +185,22 @@ export async function transcribeVideo(videoId: string): Promise<any> {
   return await res.json();
 }
 
+/**
+ * Step 1: Trigger Audio Extraction from Video
+ */
+export async function extractAudioFromVideo(videoId: string): Promise<any> {
+  const apiBaseUrl = getApiBaseUrl();
+  const res = await fetch(`${apiBaseUrl}/api/video/extract-audio/${videoId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to extract audio from video");
+  }
+
+  return await res.json();
+}
+
+

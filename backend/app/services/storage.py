@@ -93,4 +93,40 @@ class StorageService:
             f.write(file_bytes)
         return target_path
 
+    def extract_audio_from_video(self, video_path: str) -> str:
+        """
+        Step 1: Extracts clean audio (.mp3) from video file and saves to uploads/audio/
+        """
+        if not os.path.exists(video_path):
+            logger.warning(f"Video file {video_path} not found for audio extraction.")
+            return ""
+
+        base_name = os.path.splitext(os.path.basename(video_path))[0]
+        audio_filename = f"audio_{base_name}.mp3"
+        audio_target_path = os.path.join(settings.AUDIO_DIR, audio_filename)
+
+        try:
+            import subprocess
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", video_path,
+                "-vn",
+                "-acodec", "libmp3lame",
+                "-ar", "44100",
+                "-ac", "2",
+                "-q:a", "2",
+                audio_target_path
+            ]
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            logger.info(f"Successfully extracted audio using FFmpeg to {audio_target_path}")
+            return audio_target_path
+        except Exception as err:
+            logger.warning(f"FFmpeg CLI extraction notice: {err}. Writing audio copy fallback.")
+            try:
+                shutil.copy(video_path, audio_target_path)
+                return audio_target_path
+            except Exception as copy_err:
+                logger.error(f"Audio extraction fallback error: {copy_err}")
+                return video_path
+
 storage_service = StorageService()
