@@ -24,6 +24,9 @@ class Settings:
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
+    # Sarvam AI STT Engine Key
+    SARVAM_API_KEY: str = os.getenv("SARVAM_API_KEY", "sk_6qdg35nh_AMf3BMY01HNadZ0CWwZMNBCD").strip()
+
     # Upload Settings (3 GB Max Movie File Support)
     MAX_FILE_SIZE_BYTES: int = 3 * 1024 * 1024 * 1024  # 3 GB
     CHUNK_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB per chunk for resumable upload

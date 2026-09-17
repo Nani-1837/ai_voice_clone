@@ -56,6 +56,7 @@ class TranscriptionSegment(BaseModel):
     start: float
     end: float
     text: str
+    target_text: Optional[str] = None
     speaker: Optional[str] = "Speaker 1"
 
 class TranscribeResponse(BaseModel):

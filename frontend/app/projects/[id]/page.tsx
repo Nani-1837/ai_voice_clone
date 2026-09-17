@@ -19,7 +19,8 @@ import {
   Layers,
   RefreshCw,
   Volume2,
-  AudioWaveform
+  AudioWaveform,
+  Globe
 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { extractAudioFromVideo, transcribeVideo } from "@/lib/api";
@@ -29,6 +30,7 @@ interface ChunkSegment {
   start: number;
   end: number;
   text: string;
+  target_text?: string;
   speaker: string;
 }
 
@@ -43,6 +45,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
         start: 0.0,
         end: 4.5,
         text: `Welcome to this quantum lecture on ${cleanTitle}. Today we analyze wave function collapse.`,
+        target_text: `క్వాంటమ్ ఫిజిక్స్ పై ఈ సెషన్‌కు స్వాగతం. ఈరోజు మనం క్వాంటమ్ స్థితుల సూపర్‌పొజిషన్‌ను విశ్లేషిస్తాము.`,
         speaker: "Speaker 1"
       },
       {
@@ -50,6 +53,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
         start: 4.8,
         end: 9.2,
         text: "Electron probability fields in quantum mechanics obey Schrödinger's time-dependent equation.",
+        target_text: "క్వాంటమ్ మెకానిక్స్‌కు ప్రాథమికమైన అల-కణ ద్వంద్వ సిద్ధాంతం ఎలక్ట్రాన్ సంభావ్యత క్షేత్రాలను నిర్వచిస్తుంది.",
         speaker: "Speaker 1"
       },
       {
@@ -57,6 +61,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
         start: 9.5,
         end: 14.8,
         text: "Applying unitary transformation matrices allows observation of quantum entanglement states.",
+        target_text: "మాట్రిక్స్ ట్రాన్స్‌ఫార్మేషన్ ఆపరేటర్‌లను వర్తింపజేయడం ద్వారా, క్వాంటమ్ చిక్కును గణితశాస్త్రపరంగా పరిశీలించవచ్చు.",
         speaker: "Speaker 2"
       },
       {
@@ -64,6 +69,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
         start: 15.2,
         end: 20.4,
         text: "Decoherence plays a pivotal role in maintaining stability for quantum computing qubits.",
+        target_text: "క్వాంటమ్ కంప్యూటింగ్ క్యూబిట్ స్థిరత్వాన్ని నిర్వహించడంలో డీకోహెరెన్స్ కీలక పాత్ర పోషిస్తుంది.",
         speaker: "Speaker 2"
       }
     ];
@@ -74,6 +80,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
         start: 0.0,
         end: 4.5,
         text: `Welcome to the global keynote presentation on ${cleanTitle}. AI is transforming learning.`,
+        target_text: `గ్లోబల్ ఎడ్యుకేషన్ కీనోట్‌కు స్వాగతం. కృత్రిమ మేధస్సు ప్రపంచ విద్యను విప్లవాత్మకంగా మారుస్తోంది.`,
         speaker: "Speaker 1"
       },
       {
@@ -81,6 +88,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
         start: 4.8,
         end: 9.2,
         text: "Multilingual video translation removes educational language barriers for millions worldwide.",
+        target_text: "బహుభాషా వీడియో అనువాదం ప్రపంచవ్యాప్తంగా మిలియన్ల మంది విద్యార్థులకు భాషా అడ్డంకులను తొలగిస్తుంది.",
         speaker: "Speaker 1"
       },
       {
@@ -88,6 +96,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
         start: 9.5,
         end: 14.8,
         text: "Zero-shot neural voice cloning preserves educator vocal emotion and regional tone.",
+        target_text: "జీరో-షాట్ వాయిస్ క్లోనింగ్ ప్రాంతీయ మాండలికాల అంతటా ఉపాధ్యాయుల స్వర భావోద్వేగాన్ని కాపాడుతుంది.",
         speaker: "Speaker 2"
       }
     ];
@@ -99,13 +108,15 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
       start: 0.0,
       end: 4.5,
       text: `Welcome to the master dialogue recording for ${cleanTitle || 'Uploaded Video'}.`,
+      target_text: `అప్‌లోడ్ చేసిన వీడియో కోసం మాస్టర్ డైలాగ్ రికార్డింగ్‌కు స్వాగతం.`,
       speaker: "Speaker 1"
     },
     {
       id: 2,
       start: 4.8,
       end: 9.2,
-      text: "Using OpenAI Whisper ASR, dialogue is converted into time-synchronized audio chunks.",
+      text: "Using Sarvam AI & Whisper ASR, dialogue is converted into time-synchronized Telugu audio chunks.",
+      target_text: "సర్వం AI మరియు విస్పర్ ASR ఉపయోగించి, సంభాషణ సమయ-సమకాలీకరించబడిన తెలుగు ఆడియో ముక్కలుగా మార్చబడుతుంది.",
       speaker: "Speaker 1"
     },
     {
@@ -113,6 +124,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
       start: 9.5,
       end: 14.8,
       text: "Neural voice cloning & Wav2Lip HD lip sync align dubbed speech precisely with speaker movements.",
+      target_text: "న్యూరల్ వాయిస్ క్లోనింగ్ మరియు Wav2Lip HD లిప్ సింక్ డబ్బింగ్ ప్రసంగాన్ని స్పీకర్ కదలికలతో ఖచ్చితంగా సమలేఖనం చేస్తాయి.",
       speaker: "Speaker 2"
     },
     {
@@ -120,6 +132,7 @@ const generateDefaultChunks = (title: string): ChunkSegment[] => {
       start: 15.2,
       end: 20.4,
       text: "You can export full STT text scripts, SRT subtitles, or original separated vocal tracks.",
+      target_text: "మీరు పూర్తి STT వచనం స్క్రిప్ట్‌లు, SRT సబ్‌టైటిల్‌లు లేదా అసలు వేరు చేయబడిన స్వర ట్రాక్‌లను ఎగుమతి చేయవచ్చు.",
       speaker: "Speaker 2"
     }
   ];
@@ -144,6 +157,7 @@ export default function ProjectDetailsPage() {
 
   // STT & Audio Chunks State
   const [chunks, setChunks] = useState<ChunkSegment[]>(generateDefaultChunks("Quantum_Physics_Lecture.mp4"));
+  const [activeLangTab, setActiveLangTab] = useState<"both" | "english" | "telugu">("both");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [copiedText, setCopiedText] = useState(false);
@@ -177,6 +191,7 @@ export default function ProjectDetailsPage() {
           const name = data.original_filename;
           setProjectName(name);
           setChunks(generateDefaultChunks(name));
+
           // Stream directly from API streaming endpoint
           const streamUrl = `${baseUrl}/api/video/stream/${projectId}`;
           
@@ -256,14 +271,22 @@ export default function ProjectDetailsPage() {
     }
   };
 
-  const handleUpdateChunkText = (id: number, newText: string) => {
+  const handleUpdateChunkText = (id: number, newText: string, isTarget: boolean = false) => {
     setChunks((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, text: newText } : c))
+      prev.map((c) =>
+        c.id === id
+          ? isTarget
+            ? { ...c, target_text: newText }
+            : { ...c, text: newText }
+          : c
+      )
     );
   };
 
   const handleCopyScript = () => {
-    const fullScript = chunks.map(c => `[${formatTimestamp(c.start)}] ${c.speaker}: ${c.text}`).join("\n");
+    const fullScript = chunks
+      .map((c) => `[${formatTimestamp(c.start)}] EN: ${c.text}\nTE (తెలుగు): ${c.target_text || ""}`)
+      .join("\n\n");
     navigator.clipboard.writeText(fullScript);
     setCopiedText(true);
     setTimeout(() => setCopiedText(false), 2000);
@@ -274,14 +297,15 @@ export default function ProjectDetailsPage() {
     chunks.forEach((c, index) => {
       const startSrt = formatSrtTimestamp(c.start);
       const endSrt = formatSrtTimestamp(c.end);
-      srtContent += `${index + 1}\n${startSrt} --> ${endSrt}\n${c.text}\n\n`;
+      const lineText = activeLangTab === "telugu" ? c.target_text || c.text : `${c.text}\n${c.target_text || ""}`;
+      srtContent += `${index + 1}\n${startSrt} --> ${endSrt}\n${lineText}\n\n`;
     });
 
     const blob = new Blob([srtContent], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${projectName.replace(/\.[^/.]+$/, "")}_subtitles.srt`;
+    a.download = `${projectName.replace(/\.[^/.]+$/, "")}_telugu_subtitles.srt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -324,7 +348,9 @@ export default function ProjectDetailsPage() {
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className="text-xs text-slate-500">Project ID: #{projectId} • YouTube Standard 16:9 HD Video Format</p>
+              <p className="text-xs text-slate-500">
+                Project ID: #{projectId} • English ➔ <span className="text-purple-700 font-extrabold">Telugu (తెలుగు)</span> Dubbing
+              </p>
             </div>
           </div>
 
@@ -457,34 +483,64 @@ export default function ProjectDetailsPage() {
                 <AudioWaveform className="w-5 h-5 animate-pulse" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base sm:text-lg font-black tracking-tight text-white">
                     Step 2: Audio Chunks & Speech-To-Text (STT) Transcript
                   </h2>
+                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    Sarvam AI (saaras:v3)
+                  </span>
                   <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     OpenAI Whisper ASR
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Audio chunks for <strong className="text-purple-300">{projectName}</strong> with STT transcript. Click any chunk to play!
+                  Audio chunks for <strong className="text-purple-300">{projectName}</strong> in English ➔ <span className="text-emerald-400 font-bold">Telugu (తెలుగు)</span> Dubbing
                 </p>
               </div>
             </div>
 
-            {/* STT Action Tools */}
+            {/* STT Action Tools & Language Selector */}
             <div className="flex flex-wrap items-center gap-2">
+              <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1">
+                <button
+                  onClick={() => setActiveLangTab("both")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                    activeLangTab === "both" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Both (EN + TE)
+                </button>
+                <button
+                  onClick={() => setActiveLangTab("telugu")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                    activeLangTab === "telugu" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Telugu (తెలుగు)
+                </button>
+                <button
+                  onClick={() => setActiveLangTab("english")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                    activeLangTab === "english" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  English (Source)
+                </button>
+              </div>
+
               <button
                 onClick={handleTranscribeSTT}
                 disabled={isTranscribing}
                 className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isTranscribing ? "animate-spin" : ""}`} />
-                <span>{isTranscribing ? "Transcribing STT..." : "Run Whisper STT"}</span>
+                <span>{isTranscribing ? "Sarvam STT..." : "Run Sarvam AI STT"}</span>
               </button>
 
               <button
                 onClick={handleCopyScript}
-                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3 py-2 rounded-xl transition-colors cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5 text-purple-400" />
                 <span>{copiedText ? "Copied!" : "Copy Script"}</span>
@@ -492,7 +548,7 @@ export default function ProjectDetailsPage() {
 
               <button
                 onClick={handleDownloadSRT}
-                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3 py-2 rounded-xl transition-colors cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-cyan-400" />
                 <span>.SRT Subtitles</span>
@@ -500,8 +556,8 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
-          {/* Audio Chunks List with Visual Waveform Bars & STT Transcribed Text */}
-          <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1 custom-scrollbar">
+          {/* Audio Chunks List with Visual Waveform Bars & Dual STT Transcribed Text */}
+          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
             {chunks.map((chunk, idx) => {
               const isActive = currentTime >= chunk.start && currentTime <= chunk.end;
 
@@ -529,6 +585,9 @@ export default function ProjectDetailsPage() {
                           : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                       }`}>
                         {chunk.speaker}
+                      </span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Telugu (తెలుగు) Target Chunk
                       </span>
                     </div>
 
@@ -565,18 +624,43 @@ export default function ProjectDetailsPage() {
                     <span className="text-[10px] font-mono text-slate-400">Audio Track Waveform</span>
                   </div>
 
-                  {/* STT Transcribed Speech Content (Editable Input) */}
-                  <div className="pt-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Speech-To-Text (STT) Transcript:
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={chunk.text}
-                      onChange={(e) => handleUpdateChunkText(chunk.id, e.target.value)}
-                      className="w-full bg-slate-950/90 border border-slate-800 focus:border-purple-500 rounded-xl p-3 text-xs sm:text-sm text-slate-100 font-medium leading-relaxed focus:ring-1 focus:ring-purple-500 resize-none transition-colors"
-                      placeholder="Transcribed text dialogue..."
-                    />
+                  {/* STT Transcribed Speech Content (Source & Target Telugu Dual Display) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    
+                    {/* Source English Text Box */}
+                    {(activeLangTab === "both" || activeLangTab === "english") && (
+                      <div className="space-y-1">
+                        <label className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span>English (Source Speech STT):</span>
+                          <span className="text-purple-400 font-mono">EN-US</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={chunk.text}
+                          onChange={(e) => handleUpdateChunkText(chunk.id, e.target.value, false)}
+                          className="w-full bg-slate-950/90 border border-slate-800 focus:border-purple-500 rounded-xl p-3 text-xs sm:text-sm text-slate-200 font-medium leading-relaxed focus:ring-1 focus:ring-purple-500 resize-none transition-colors"
+                          placeholder="Transcribed English text dialogue..."
+                        />
+                      </div>
+                    )}
+
+                    {/* Target Telugu Text Box */}
+                    {(activeLangTab === "both" || activeLangTab === "telugu") && (
+                      <div className="space-y-1">
+                        <label className="flex items-center justify-between text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                          <span>Telugu (తెలుగు Target Dubbing STT):</span>
+                          <span className="text-emerald-400 font-mono font-bold">TE-IN (Sarvam AI)</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={chunk.target_text || "తెలుగు సంభాషణ ట్రాన్స్‌క్రిప్ట్..."}
+                          onChange={(e) => handleUpdateChunkText(chunk.id, e.target.value, true)}
+                          className="w-full bg-slate-950/90 border border-emerald-900/60 focus:border-emerald-500 rounded-xl p-3 text-xs sm:text-sm text-emerald-200 font-semibold leading-relaxed focus:ring-1 focus:ring-emerald-500 resize-none transition-colors"
+                          placeholder="తెలుగు సంభాషణ ట్రాన్స్‌క్రిప్ట్..."
+                        />
+                      </div>
+                    )}
+
                   </div>
                 </div>
               );
