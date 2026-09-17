@@ -215,18 +215,35 @@ def transcribe_video(
     Saves transcription JSON in Neon PostgreSQL.
     """
     video = db.query(Video).filter(Video.id == video_id).first()
-    
-    file_path = video.storage_path if video else ""
-    source_lang = video.source_language if video else "English"
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
 
-    # Execute Whisper Transcription Pipeline
-    transcription_data = transcription_service.transcribe_video_file(file_path, source_lang)
+    # Ensure audio track is extracted first
+    audio_file_path = video.audio_path
+    if not audio_file_path or not os.path.exists(audio_file_path):
+        audio_file_path = storage_service.extract_audio_from_video(video.storage_path)
+        if audio_file_path:
+            video.audio_path = audio_file_path
+            db.commit()
+
+    if not audio_file_path or not os.path.exists(audio_file_path):
+        audio_file_path = video.storage_path
+
+    source_lang = video.source_language or "English"
+    target_lang = video.target_language or "Telugu"
+
+    # Step 1: Execute Sarvam AI & Whisper STT Audio-to-Text Pipeline
+    # Step 2: Translate STT to target language (Telugu)
+    transcription_data = transcription_service.transcribe_video_file(
+        file_path=audio_file_path, 
+        source_language=source_lang,
+        target_language=target_lang
+    )
 
     # Save to Neon DB if record exists
-    if video:
-        video.transcription_json = json.dumps(transcription_data)
-        video.status = "transcribed"
-        db.commit()
+    video.transcription_json = json.dumps(transcription_data)
+    video.status = "transcribed"
+    db.commit()
 
     return {
         "video_id": video_id,
